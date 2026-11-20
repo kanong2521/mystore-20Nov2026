@@ -39,7 +39,8 @@ module.exports = async (req, res) => {
     if (!cfg.length || !drugs.length || !stock.length) {
       return res.status(502).json({ error: 'ได้ข้อมูลว่าง ตรวจนโยบายสิทธิ์เข้าถึงแถว (RLS) ของตาราง' });
     }
-    const meta = { as_of: cfg[0].as_of, source: 'supabase' };
+    const serverToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
+    const meta = { as_of: cfg[0].as_of, server_today: serverToday, source: 'supabase' };
     const out = {
       drugs: { meta, items: drugs },
       stock: { meta, items: stock },

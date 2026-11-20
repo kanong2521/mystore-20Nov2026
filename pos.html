@@ -682,6 +682,7 @@
         font-size: 14px;
         color: var(--sb-text-soft);
       }
+      .dt-nowrap { white-space: nowrap; }
       .type-badge {
         display: inline-block;
         padding: 2px 8px;
@@ -839,6 +840,23 @@
           </p>
         </div>
         <button type="button" class="btn btn-outline-green btn-sm" id="retryApiBtn">ลองเชื่อมต่อเซิร์ฟเวอร์ใหม่</button>
+      </div>
+
+      <!-- แถบแจ้งเตือนเมื่อวันอ้างอิงระบบไม่ตรงกับวันปัจจุบัน (Asia/Bangkok) -->
+      <div class="fallback-banner" id="dateDriftBanner" role="status" aria-live="polite">
+        <div>
+          <p class="fallback-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span>วันอ้างอิงของระบบยังไม่ตรงกับวันปัจจุบัน</span>
+          </p>
+          <p class="fallback-desc" id="dateDriftDesc">
+            รายการจ่ายใหม่จะลงวันที่ตามวันอ้างอิงในฐานข้อมูล จนกว่าจะปรับให้ตรงกับวันนี้
+          </p>
+        </div>
+        <a class="btn btn-outline-green btn-sm" href="./admin.html#date-sync">ปรับเป็นวันนี้ในหน้าจัดการระบบ</a>
       </div>
 
       <div class="pos-grid">
@@ -1069,6 +1087,7 @@
         // สถานะกลางของหน้าขายยา ไม่ใช้ Date หรือตัวแปรเวลาของเครื่องเบราว์เซอร์
         const state = {
           asOf: '',
+          serverToday: '',
           isFallback: false,
           submitting: false,
           sellableDrugs: [],
@@ -1093,6 +1112,19 @@
           const open = $('mobileDrawer').classList.toggle('open');
           $('mobileMenuBtn').setAttribute('aria-expanded', String(open));
         });
+
+        // จัดรูปแบบวันที่และเวลาแบบไทย พ.ศ. จากข้อความ ISO โดยไม่ใช้คำสั่ง Date
+        const THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        function fmtThaiDate(iso) {
+          const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (!m) return String(iso || 'ไม่ระบุ');
+          return `${Number(m[3])} ${THAI_MONTHS[Number(m[2]) - 1] || m[2]} ${Number(m[1]) + 543}`;
+        }
+        function fmtThaiDateTime(dtIso) {
+          const m = String(dtIso || '').match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+          if (!m) return String(dtIso || '-');
+          return `${Number(m[3])} ${THAI_MONTHS[Number(m[2]) - 1] || m[2]} ${Number(m[1]) + 543} · ${m[4]}:${m[5]} น.`;
+        }
 
         // ฟังก์ชันช่วยจัดรูปแบบตัวเลขไทย
         function fmtNum(n) {
@@ -1190,6 +1222,7 @@
           sellableDrugs.sort((a, b) => a.sku.localeCompare(b.sku));
 
           state.asOf = asOf;
+          state.serverToday = String(raw.stock?.meta?.server_today || raw.drugs?.meta?.server_today || '').slice(0, 10);
           state.drugLookup = drugLookup;
           state.sellableDrugs = sellableDrugs;
           state.dispenseLogs = Array.isArray(raw.dispense_log?.items) ? raw.dispense_log.items.slice() : [];
@@ -1345,7 +1378,8 @@
           for (const row of sorted) {
             const tr = document.createElement('tr');
             const drug = state.drugLookup.get(String(row.sku));
-            const dtText = String(row.datetime || '').slice(0, 16).replace('T', ' ');
+            const rawDt = String(row.datetime || '').slice(0, 19).replace('T', ' ');
+            const dtText = fmtThaiDateTime(row.datetime);
             const rowType = String(row.type || 'dispense');
             const typeText = rowType === 'return' ? 'รับคืน' : rowType === 'void' ? 'ยกเลิก' : 'จ่าย';
 
@@ -1362,8 +1396,9 @@
             idStrong.textContent = String(row.dispense_id || '-');
             tdId.appendChild(idStrong);
             const dtSub = document.createElement('span');
-            dtSub.className = 'sub-cell tabular';
-            dtSub.textContent = dtText || '-';
+            dtSub.className = 'sub-cell dt-nowrap tabular';
+            if (rawDt) dtSub.setAttribute('title', rawDt);
+            dtSub.textContent = dtText;
             tdId.appendChild(dtSub);
             tr.appendChild(tdId);
 
@@ -1560,9 +1595,23 @@
             }
           }
 
-          const asOfLabel = `วันอ้างอิง ${state.asOf || 'ไม่ระบุ'}`;
+          const asOfLabel = state.asOf ? `วันอ้างอิง ${fmtThaiDate(state.asOf)}` : 'วันอ้างอิง ไม่ระบุ';
           $('asOfChip').textContent = asOfLabel;
           $('heroAsOfMobile').textContent = asOfLabel;
+          if (state.asOf) {
+            $('asOfChip').setAttribute('title', state.asOf);
+            $('heroAsOfMobile').setAttribute('title', state.asOf);
+          }
+
+          const driftBanner = $('dateDriftBanner');
+          if (!state.isFallback && state.serverToday && state.asOf && state.asOf !== state.serverToday) {
+            $('dateDriftDesc').textContent =
+              `วันอ้างอิงระบบ (${fmtThaiDate(state.asOf)} / ${state.asOf}) ต่างจากวันปัจจุบัน (${fmtThaiDate(state.serverToday)} / ${state.serverToday}) · รายการจ่ายใหม่จะลงวันที่ตามวันอ้างอิงในฐานข้อมูล`;
+            driftBanner.classList.add('show');
+          } else {
+            driftBanner.classList.remove('show');
+          }
+
           renderDrugSelector();
           renderRecentDispenses();
           updateSubmitButtonState();
@@ -1578,8 +1627,8 @@
 
           const sku = String($('skuSelect').value || state.selectedSku || '').trim();
           const qtyRaw = String($('qtyInput').value || '').trim();
-          const patientCode = String($('patientInput').value || '').trim();
-          const pharmacistCode = String($('pharmacistInput').value || '').trim();
+          const patientCode = String($('patientInput').value || '').trim().toUpperCase();
+          const pharmacistCode = String($('pharmacistInput').value || '').trim().toUpperCase();
 
           if (!sku) {
             showFormError('กรุณาเลือกรายการยาที่ต้องการจ่าย');

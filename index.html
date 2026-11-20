@@ -771,6 +771,10 @@
             <span>Snapshot: <strong id="heroSnapshot" class="tabular">กำลังโหลด…</strong></span>
             <span>ซิงก์ล่าสุด: <strong id="heroLastSync" class="tabular">กำลังโหลด…</strong></span>
           </div>
+          <div class="telemetry-foot" id="heroDriftRow" style="display:none;padding-top:10px;margin-top:10px">
+            <span id="heroDriftText" style="color:#ffd9a0"></span>
+            <a class="hero-sync-badge" href="./admin.html#date-sync" style="background:#faf6ee;color:#7a5a1e">ปรับเป็นวันนี้</a>
+          </div>
         </aside>
       </div>
     </section>
@@ -911,7 +915,7 @@
                   <div>
                     <h3 class="module-title">จัดการระบบ (ผู้ดูแล)</h3>
                     <p class="module-desc">
-                      ศูนย์ควบคุมทั้ง 8 คำสั่งผ่าน <code translate="no">/api/admin</code> ยืนยันตัวตนด้วย
+                      ศูนย์ควบคุม 9 คำสั่งผ่าน <code translate="no">/api/admin</code> ยืนยันตัวตนด้วย
                       <span translate="no">ADMIN_CODE</span> บนเซิร์ฟเวอร์ พร้อมบันทึกประวัติ
                       <span translate="no">change_log</span> ทุกธุรกรรม
                     </p>
@@ -930,8 +934,8 @@
                 <span class="mono" translate="no">stock_receive · stock_fix_expiry · stock_set_status</span>
               </div>
               <div class="admin-group">
-                <strong>รับคืน &amp; ยกเลิกรายการจ่าย (2 คำสั่ง)</strong>
-                <span class="mono" translate="no">dispense_return · dispense_void</span>
+                <strong>รับคืน ยกเลิก &amp; ตั้งวันอ้างอิง (3 คำสั่ง)</strong>
+                <span class="mono" translate="no">dispense_return · dispense_void · config_set_as_of</span>
               </div>
               <div class="admin-group">
                 <strong>งานติดตามความปลอดภัยคลัง</strong>
@@ -1057,8 +1061,18 @@
           }
         }
 
+        const THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        function fmtThaiDate(iso) {
+          const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (!m) return iso || 'ไม่ระบุ';
+          const yBe = Number(m[1]) + 543;
+          const mon = THAI_MONTHS[Number(m[2]) - 1] || m[2];
+          return `${Number(m[3])} ${mon} ${yBe}`;
+        }
+
         function computeSnapshotSummary(bundle) {
           const asOf = bundle.syncMeta.asOf || bundle.drugs.meta?.as_of || '';
+          const serverToday = bundle.syncMeta.serverToday || '';
           const drugs = bundle.drugs?.items || [];
           const drugMap = new Map(drugs.map((d) => [d.sku, d]));
           const catalogItems = bundle.catalog?.items || [];
@@ -1094,6 +1108,7 @@
 
           return {
             asOf,
+            serverToday,
             totalSku: drugs.length || catalogItems.length || 0,
             totalLots: stockItems.length,
             readySkuCount: readySkus.size,
@@ -1132,8 +1147,17 @@
           heroIncEl.classList.toggle('warn', s.openIncidents > 0);
           $('heroDispenseSub').textContent = `จ่ายสะสม ${s.dispenseCount} รายการ`;
 
-          $('heroSnapshot').textContent = s.asOf || '—';
+          const snapEl = $('heroSnapshot');
+          snapEl.textContent = s.asOf ? `${fmtThaiDate(s.asOf)} (${s.asOf})` : 'ไม่ระบุ';
           $('heroLastSync').textContent = formatSyncClock(bundle.syncMeta.lastSyncAt);
+
+          const driftRow = $('heroDriftRow');
+          if (s.serverToday && s.asOf && s.asOf !== s.serverToday) {
+            $('heroDriftText').textContent = `วันอ้างอิงยังต่างจากวันนี้ (${fmtThaiDate(s.serverToday)})`;
+            driftRow.style.display = 'flex';
+          } else {
+            driftRow.style.display = 'none';
+          }
 
           // Dashboard Card Strip
           $('dashReadySku').textContent = `${s.readySkuCount} SKU`;

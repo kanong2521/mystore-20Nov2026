@@ -88,8 +88,9 @@
     }
 
     const asOf = String(raw.stock?.meta?.as_of || raw.drugs?.meta?.as_of || '').slice(0, 10);
+    const serverToday = String(raw.stock?.meta?.server_today || raw.drugs?.meta?.server_today || '').slice(0, 10);
     const source = raw.drugs?.meta?.source || 'supabase';
-    const baseMeta = { as_of: asOf, source };
+    const baseMeta = { as_of: asOf, ...(serverToday ? { server_today: serverToday } : {}), source };
 
     const drugsItems = raw.drugs.items.map((d) => ({
       ...d,
@@ -195,6 +196,7 @@
         mode: 'supabase-api',
         source,
         asOf,
+        serverToday,
         hashes,
         counts,
         catalogFallback: Boolean(catalogMeta.fallback),

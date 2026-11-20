@@ -849,6 +849,19 @@
       </div>
     </div>
 
+    <div id="date-drift-bar" class="lock-bar" role="status" aria-live="polite" hidden>
+      <div class="lock-bar-inner" style="justify-content:space-between;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span id="drift-bar-text">วันอ้างอิงในฐานข้อมูลยังไม่ตรงกับวันปัจจุบัน</span>
+        </div>
+        <button type="button" class="btn primary sm" id="btn-sync-today-bar" data-write>ปรับวันอ้างอิงเป็นวันนี้</button>
+      </div>
+    </div>
+
     <main class="wrap" id="main">
       <div id="load-banner" class="banner" role="alert" hidden>
         <div>
@@ -1077,6 +1090,19 @@
             </div>
           </div>
 
+          <div class="user-quick-bar" id="date-sync">
+            <div class="user-quick-note">
+              <strong>วันอ้างอิงของระบบ (<code translate="no">app_config.as_of</code>)</strong> · ฐานข้อมูล:
+              <strong class="tabular" id="cfgAsOfDisplay">-</strong> · วันปัจจุบันฝั่งเซิร์ฟเวอร์ (<span translate="no">Asia/Bangkok</span>):
+              <strong class="tabular" id="cfgServerTodayDisplay">-</strong>
+              <span class="badge b-active" id="cfgDateMatchBadge" style="margin-left:8px">กำลังตรวจ</span>
+            </div>
+            <div class="user-quick-actions">
+              <button type="button" class="btn primary sm" id="btn-sync-today" data-write>อัปเดตเป็นวันปัจจุบัน</button>
+              <button type="button" class="btn secondary sm" id="btn-set-asof" data-write>กำหนดวันอ้างอิงเอง</button>
+            </div>
+          </div>
+
           <div class="user-quick-bar">
             <p class="user-quick-note">
               ระบบนี้ใช้รหัสผู้ดูแลกลาง (<code translate="no">ADMIN_CODE</code>) ร่วมกับรหัสเภสัชกรผู้บันทึก
@@ -1181,6 +1207,7 @@
 
         const state = {
           asOf: null,
+          serverToday: null,
           catalog: [],
           stock: [],
           log: [],
@@ -1302,6 +1329,29 @@
             return String(e);
           }
         }
+        const THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        function fmtThaiDate(iso) {
+          const m = str(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (!m) return str(iso) || 'ไม่ระบุ';
+          return Number(m[3]) + ' ' + (THAI_MONTHS[Number(m[2]) - 1] || m[2]) + ' ' + (Number(m[1]) + 543);
+        }
+        function fmtThaiDateTime(dtIso) {
+          const m = str(dtIso).match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+          if (!m) return str(dtIso) || '-';
+          return (
+            Number(m[3]) +
+            ' ' +
+            (THAI_MONTHS[Number(m[2]) - 1] || m[2]) +
+            ' ' +
+            (Number(m[1]) + 543) +
+            ' · ' +
+            m[4] +
+            ':' +
+            m[5] +
+            ' น.'
+          );
+        }
+
         function parseDispenseNum(id) {
           const m = String(id || '').match(/\d+/);
           return m ? Number(m[0]) : -1;
@@ -1437,9 +1487,16 @@
           state.halted = false;
           const items = (x) => (x && Array.isArray(x.items) ? x.items : []);
           const metaAsOf = (x) => (x && x.meta && x.meta.as_of ? x.meta.as_of : null);
+          const metaServerToday = (x) => (x && x.meta && x.meta.server_today ? x.meta.server_today : null);
 
           state.asOf = fmtDate(
             metaAsOf(json.drugs) || metaAsOf(json.catalog) || metaAsOf(json.stock) || metaAsOf(json.dispense_log)
+          );
+          state.serverToday = fmtDate(
+            metaServerToday(json.drugs) ||
+              metaServerToday(json.catalog) ||
+              metaServerToday(json.stock) ||
+              metaServerToday(json.dispense_log)
           );
           state.catalog = items(json.catalog);
           state.stock = items(json.stock);
@@ -1448,9 +1505,31 @@
           state.drugBySku = new Map(state.catalog.map((d) => [d.sku, d]));
           state.loadedOnce = true;
 
-          const asOfLabel = 'วันอ้างอิง ' + (state.asOf || 'ไม่ทราบ');
+          const asOfLabel = state.asOf ? 'วันอ้างอิง ' + fmtThaiDate(state.asOf) : 'วันอ้างอิง ไม่ทราบ';
           $('#asOfChip').textContent = asOfLabel;
           $('#heroAsOfMobile').textContent = asOfLabel;
+          if (state.asOf) {
+            $('#asOfChip').setAttribute('title', state.asOf);
+            $('#heroAsOfMobile').setAttribute('title', state.asOf);
+          }
+
+          const hasDrift = Boolean(state.serverToday && state.asOf && state.asOf !== state.serverToday);
+          $('#date-drift-bar').hidden = !hasDrift;
+          if (hasDrift) {
+            $('#drift-bar-text').textContent =
+              'วันอ้างอิงในฐานข้อมูล (' +
+              fmtThaiDate(state.asOf) +
+              ' / ' +
+              state.asOf +
+              ') ต่างจากวันปัจจุบัน (' +
+              fmtThaiDate(state.serverToday) +
+              ' / ' +
+              state.serverToday +
+              ') ทำให้การจ่ายยาและรับคืนลงวันที่ ' +
+              state.asOf;
+            $('#btn-sync-today-bar').textContent = 'ปรับเป็นวันนี้ (' + fmtThaiDate(state.serverToday) + ')';
+          }
+
           $('#n-catalog').textContent = '(' + state.catalog.length + ')';
           $('#n-stock').textContent = '(' + state.stock.length + ')';
           $('#n-log').textContent = '(' + state.log.length + ')';
@@ -1723,11 +1802,13 @@
               actBtn('ยกเลิกรายการ', 'danger', () => openVoid(r))
             );
           }
+          const dtTd = td(fmtThaiDateTime(r.datetime), 'nowrap tabular');
+          if (r.datetime) dtTd.setAttribute('title', str(r.datetime).slice(0, 19).replace('T', ' '));
           return el(
             'tr',
             null,
             td(r.dispense_id, 'code'),
-            td(str(r.datetime).slice(0, 19).replace('T', ' '), 'nowrap tabular'),
+            dtTd,
             td(r.sku, 'code'),
             td(r.lot, 'nowrap mono'),
             td(fmtInt(r.qty), 'num'),
@@ -1802,6 +1883,23 @@
           const incEl = $('#sumIncidents');
           incEl.textContent = fmtInt(openIncidentsCount);
           incEl.className = 'u-stat-val tabular' + (openIncidentsCount > 0 ? ' warn' : '');
+
+          $('#cfgAsOfDisplay').textContent = state.asOf ? fmtThaiDate(state.asOf) + ' (' + state.asOf + ')' : 'ไม่ระบุ';
+          $('#cfgServerTodayDisplay').textContent = state.serverToday
+            ? fmtThaiDate(state.serverToday) + ' (' + state.serverToday + ')'
+            : 'ไม่ระบุ';
+          const badgeEl = $('#cfgDateMatchBadge');
+          const matched = Boolean(state.asOf && state.serverToday && state.asOf === state.serverToday);
+          if (state.asOf && state.serverToday) {
+            badgeEl.textContent = matched ? 'ตรงกับวันปัจจุบัน' : 'ยังไม่ตรงกับวันปัจจุบัน';
+            badgeEl.className = 'badge ' + (matched ? 'b-active' : 'b-quarantine');
+          } else {
+            badgeEl.textContent = 'กำลังตรวจ';
+            badgeEl.className = 'badge b-written_off';
+          }
+          $('#btn-sync-today').textContent = state.serverToday
+            ? 'อัปเดตเป็นวันนี้ (' + fmtThaiDate(state.serverToday) + ')'
+            : 'อัปเดตเป็นวันปัจจุบัน';
         }
 
         function selectOperatorCode(code) {
@@ -1839,6 +1937,8 @@
               if (isSelected) {
                 codeCell.append(el('span', { class: 'small', text: 'กำลังใช้งานในเซสชันนี้' }));
               }
+              const lastTd = td(op.lastDt ? fmtThaiDateTime(op.lastDt) : '-', 'nowrap tabular');
+              if (op.lastDt) lastTd.setAttribute('title', op.lastDt.replace('T', ' '));
               return el(
                 'tr',
                 null,
@@ -1847,7 +1947,7 @@
                 td(fmtInt(op.return), 'num'),
                 td(fmtInt(op.void), 'num'),
                 td(fmtInt(op.totalQty), 'num'),
-                td(op.lastDt ? op.lastDt.replace('T', ' ') : '-', 'nowrap tabular'),
+                lastTd,
                 el(
                   'td',
                   { class: 'actions' },
@@ -2542,6 +2642,40 @@
           });
         }
 
+        function openSetAsOf(defaultIso) {
+          const target = defaultIso || state.serverToday || state.asOf || '';
+          openDialog({
+            title: 'ตั้งค่าวันอ้างอิงของระบบ (app_config.as_of)',
+            fields: [
+              {
+                name: 'as_of',
+                label: 'วันอ้างอิงใหม่ (YYYY-MM-DD)',
+                type: 'date',
+                required: true,
+                full: true,
+                value: target && isDate(target) ? target : '',
+                hint: 'หลังบันทึก รายการจ่ายยาและรับคืนใหม่จะลงวันที่ตามวันอ้างอิงนี้ และตรวจวันหมดอายุเทียบวันนี้'
+              }
+            ],
+            summary: (v) =>
+              'เปลี่ยนวันอ้างอิงระบบจาก ' +
+              (state.asOf ? fmtThaiDate(state.asOf) + ' (' + state.asOf + ')' : 'ไม่ระบุ') +
+              (v.as_of && isDate(v.as_of) ? ' → เป็น ' + fmtThaiDate(v.as_of) + ' (' + v.as_of + ')' : ''),
+            validate: (v) => (!v.as_of || !isDate(v.as_of) ? ['กรุณาระบุวันที่รูปแบบ YYYY-MM-DD ให้ครบถ้วน'] : []),
+            body: (v) => ({ action: 'config_set_as_of', as_of: v.as_of }),
+            success: (resp, v) =>
+              'ตั้งค่าวันอ้างอิงเป็น ' +
+              fmtThaiDate(resp.as_of || v.as_of) +
+              ' (' +
+              (resp.as_of || v.as_of) +
+              ') แล้ว'
+          });
+        }
+
+        $('#btn-sync-today-bar').addEventListener('click', () => openSetAsOf(state.serverToday));
+        $('#btn-sync-today').addEventListener('click', () => openSetAsOf(state.serverToday));
+        $('#btn-set-asof').addEventListener('click', () => openSetAsOf(state.serverToday || state.asOf));
+
         // ซิงก์อัปเดตทันทีเมื่อแท็บหน้าขายยาหรือแท็บอื่นแก้ไขข้อมูล
         if (syncChannel) {
           syncChannel.addEventListener('message', (ev) => {
@@ -2553,6 +2687,9 @@
         $('#admin-code').value = ssGet(KEY_ADMIN);
         $('#rx-code').value = ssGet(KEY_RX);
         updateLock();
+        if (typeof location !== 'undefined' && location.hash === '#date-sync') {
+          selectTab('users');
+        }
         loadData();
       })();
     </script>
