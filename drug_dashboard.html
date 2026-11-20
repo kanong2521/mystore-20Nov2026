@@ -668,7 +668,7 @@
       /* Layout Cards */
       .layout-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
         gap: 16px;
         margin-bottom: 24px;
       }
@@ -945,6 +945,298 @@
         display: block;
         font-size: 12px;
         color: var(--sb-text-soft);
+      }
+
+      /* Category Distribution (Donut + Synchronized Color Bars) */
+      .cat-card-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .cat-scope-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .cat-replay-btn,
+      .cat-clear-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--sb-border);
+        background: var(--sb-white);
+        color: var(--sb-green);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 150ms ease, border-color 150ms ease;
+      }
+
+      .cat-replay-btn:hover,
+      .cat-clear-btn:hover {
+        background: var(--sb-neutral-warm);
+        border-color: var(--sb-green);
+      }
+
+      .cat-replay-btn:focus-visible,
+      .cat-clear-btn:focus-visible {
+        outline: 2px solid var(--sb-green);
+        outline-offset: 2px;
+      }
+
+      .cat-dist-layout {
+        display: grid;
+        grid-template-columns: 228px minmax(0, 1fr);
+        gap: 20px;
+        align-items: start;
+      }
+
+      .cat-donut-stage {
+        background: #f6f5f0;
+        border: 1px solid var(--sb-hairline);
+        border-radius: 12px;
+        padding: 18px 14px 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        position: sticky;
+        top: 82px;
+      }
+
+      .cat-donut-box {
+        position: relative;
+        width: 192px;
+        height: 192px;
+        display: grid;
+        place-items: center;
+      }
+
+      .cat-donut-svg {
+        width: 192px;
+        height: 192px;
+        overflow: visible;
+        transform: rotate(-90deg);
+      }
+
+      .cat-slice {
+        fill: transparent;
+        cursor: pointer;
+        transform-origin: 90px 90px;
+        transition:
+          stroke-dashoffset 560ms cubic-bezier(0.16, 1, 0.3, 1),
+          opacity 180ms ease,
+          transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .cat-slice.is-dimmed {
+        opacity: 0.28;
+      }
+
+      .cat-slice.is-hovered,
+      .cat-slice.is-selected {
+        opacity: 1;
+        transform: scale(1.038);
+      }
+
+      .cat-slice:focus-visible {
+        outline: 2px solid var(--sb-green);
+        outline-offset: 2px;
+      }
+
+      .cat-donut-center {
+        position: absolute;
+        text-align: center;
+        pointer-events: none;
+        max-width: 112px;
+      }
+
+      .cat-center-num {
+        display: block;
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 1.05;
+        color: var(--sb-house);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .cat-center-unit {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--sb-text-soft);
+        margin-top: 2px;
+      }
+
+      .cat-center-sub {
+        display: block;
+        font-size: 11px;
+        color: #525a56;
+        margin-top: 2px;
+      }
+
+      .cat-donut-caption {
+        font-size: 13px;
+        font-weight: 600;
+        color: #3f4743;
+        text-align: center;
+        line-height: 1.4;
+      }
+
+      .cat-bars-stage {
+        min-width: 0;
+      }
+
+      .cat-bars-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .cat-bars-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--sb-text);
+      }
+
+      .cat-bars-sub {
+        font-size: 12px;
+        color: #525a56;
+      }
+
+      .cat-bars-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .cat-row-btn {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 6px 8px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+        transition:
+          background-color 150ms ease,
+          border-color 150ms ease,
+          opacity 180ms ease;
+      }
+
+      .cat-row-btn:hover,
+      .cat-row-btn.is-hovered {
+        background: var(--sb-neutral-warm);
+        border-color: var(--sb-hairline);
+      }
+
+      .cat-row-btn.active,
+      .cat-row-btn.is-selected {
+        background: rgba(0, 98, 65, 0.08);
+        border-color: var(--sb-accent);
+      }
+
+      .cat-row-btn.is-dimmed {
+        opacity: 0.42;
+      }
+
+      .cat-row-btn:focus-visible {
+        outline: 2px solid var(--sb-green);
+        outline-offset: 2px;
+      }
+
+      .cat-row-top {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        width: 100%;
+      }
+
+      .cat-row-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--sb-text);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .cat-inactive-chip {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+        background: var(--sb-red-tint);
+        color: var(--sb-red);
+        flex-shrink: 0;
+      }
+
+      .cat-row-metrics {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+
+      .cat-row-meta {
+        font-size: 11px;
+        color: #525a56;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .cat-row-count {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--sb-house);
+        min-width: 22px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .cat-row-track {
+        width: 100%;
+        height: 6px;
+        border-radius: 999px;
+        background: #e6e3dd;
+        overflow: hidden;
+      }
+
+      .cat-row-fill {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        transform-origin: left center;
+        transform: scaleX(1);
+        transition: transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .cat-dist-layout.is-animating .cat-row-fill {
+        transform: scaleX(0);
+        transition: none;
+      }
+
+      .cat-dist-layout.is-animating .cat-slice {
+        transition: none;
       }
 
       /* Filter Toolbar */
@@ -1715,6 +2007,12 @@
         .mobile-menu-btn {
           display: inline-flex;
         }
+        .cat-dist-layout {
+          grid-template-columns: 1fr;
+        }
+        .cat-donut-stage {
+          position: static;
+        }
       }
 
       @media (max-width: 1050px) {
@@ -1910,9 +2208,19 @@
           <div class="card-head">
             <div>
               <h2 class="card-title-h1">การกระจายรายการยาตามหมวดหมู่</h2>
-              <p class="card-sub">คลิกที่หมวดหมู่เพื่อกรองตารางทะเบียนยาด้านล่าง</p>
+              <p class="card-sub">เลือกหมวดจากวงแหวนหรือกราฟแท่งเพื่อกรองรายการในทะเบียนยา</p>
             </div>
-            <span class="pill-tag mint" id="catDistPill">16 Categories</span>
+            <div class="card-head-actions">
+              <span class="pill-tag mint tabular" id="catDistPill">0 หมวด</span>
+              <button type="button" class="cat-replay-btn" id="catReplayBtn">เล่นซ้ำ</button>
+            </div>
+          </div>
+          <div class="cat-card-controls">
+            <div class="cat-scope-pills" id="catScopePills" role="group" aria-label="ขอบเขตข้อมูลหมวดหมู่ยา">
+              <button type="button" class="filter-pill active" data-cat-scope="all">ทั้งหมด</button>
+              <button type="button" class="filter-pill" data-cat-scope="active">ใช้งานอยู่</button>
+              <button type="button" class="filter-pill" data-cat-scope="stocked">มีสต็อก</button>
+            </div>
           </div>
           <div id="overviewBars"></div>
         </article>
@@ -2308,11 +2616,21 @@
         let stockedSkuCount = 0;
         let unstockedSkuCount = 0;
 
+        const CAT_PALETTE = [
+          '#163a30', '#2f7259', '#eb6f4c', '#2264d1', '#9a5c9e',
+          '#b88224', '#6478a6', '#5c7a3e', '#ad4660', '#2c7582',
+          '#8c8750', '#7d5836', '#5761a6', '#d88855', '#4e8a9c'
+        ];
+
         let activeMode = 'overview';
         let page = 1;
         let pageSize = 12;
         let coverageFilter = '';
         let activeFilter = '';
+        let catScope = 'all';
+        let hoveredCategory = '';
+        let categoryStats = [];
+        let catColorMap = new Map();
 
         const uniq = (k) => new Set(items.map((x) => x[k])).size;
         const countBy = (k) => {
@@ -2412,16 +2730,274 @@
           `;
         }
 
-        function bindChartFilters() {
-          document.querySelectorAll('[data-filter-cat]').forEach((btn) => {
-            btn.onclick = () => {
-              const v = btn.dataset.filterCat;
-              $('category').value = $('category').value === v ? '' : v;
+        function hasStockRecord(sku) {
+          return (catalogBySku.get(sku)?.lot_count ?? 0) > 0 || stockBySku.has(sku);
+        }
+
+        function computeCategoryStats(scope = catScope) {
+          const scopedItems = items.filter((x) => {
+            if (scope === 'active') return x.is_active !== false;
+            if (scope === 'stocked') return hasStockRecord(x.sku);
+            return true;
+          });
+          const m = new Map();
+          for (const x of scopedItems) {
+            const key = x.category || 'ไม่ระบุ';
+            if (!m.has(key)) {
+              m.set(key, {
+                label: key,
+                n: 0,
+                active: 0,
+                inactive: 0,
+                stocked: 0,
+                color: catColorMap.get(key) || CAT_PALETTE[0]
+              });
+            }
+            const entry = m.get(key);
+            entry.n++;
+            if (x.is_active === false) entry.inactive++;
+            else entry.active++;
+            if (hasStockRecord(x.sku)) entry.stocked++;
+          }
+          return [...m.values()].sort(
+            (a, b) => b.n - a.n || String(a.label).localeCompare(String(b.label), 'th')
+          );
+        }
+
+        function syncCategoryVisualState() {
+          const stage = $('overviewBars');
+          if (!stage) return;
+          const selectedCat = $('category').value;
+          const focusCat = hoveredCategory || selectedCat;
+          const total = categoryStats.reduce((s, r) => s + r.n, 0);
+
+          stage.querySelectorAll('[data-cat-slice]').forEach((el) => {
+            const cat = el.dataset.catSlice;
+            const isSelected = Boolean(selectedCat && cat === selectedCat);
+            const isHovered = Boolean(hoveredCategory && cat === hoveredCategory);
+            const isDimmed = Boolean(focusCat && cat !== focusCat);
+            el.classList.toggle('is-selected', isSelected);
+            el.classList.toggle('is-hovered', isHovered);
+            el.classList.toggle('is-dimmed', isDimmed);
+            el.setAttribute('aria-pressed', String(isSelected));
+          });
+
+          stage.querySelectorAll('.cat-row-btn[data-filter-cat]').forEach((btn) => {
+            const cat = btn.dataset.filterCat;
+            const isSelected = Boolean(selectedCat && cat === selectedCat);
+            const isHovered = Boolean(hoveredCategory && cat === hoveredCategory);
+            const isDimmed = Boolean(focusCat && cat !== focusCat);
+            btn.classList.toggle('active', isSelected);
+            btn.classList.toggle('is-selected', isSelected);
+            btn.classList.toggle('is-hovered', isHovered);
+            btn.classList.toggle('is-dimmed', isDimmed);
+            btn.setAttribute('aria-pressed', String(isSelected));
+          });
+
+          const centerEl = $('catDonutCenter');
+          const captionEl = $('catDonutCaption');
+          const clearEl = $('catClearBtn');
+          if (clearEl) clearEl.classList.toggle('hide', !selectedCat);
+
+          if (!centerEl || !captionEl) return;
+          const matched = focusCat ? categoryStats.find((r) => r.label === focusCat) : null;
+          if (matched) {
+            const pct = total ? ((matched.n / total) * 100).toFixed(1) : '0.0';
+            centerEl.innerHTML =
+              `<b class="cat-center-num tabular">${fmt(matched.n)}</b>` +
+              `<span class="cat-center-unit">SKU · ${pct}%</span>`;
+            const detail =
+              matched.active === 0 && matched.inactive > 0
+                ? `${matched.label} · ปิดใช้งาน`
+                : `${matched.label} · มีสต็อก ${matched.stocked}/${matched.n} SKU`;
+            captionEl.textContent = detail;
+          } else if (focusCat) {
+            centerEl.innerHTML =
+              `<b class="cat-center-num tabular">0</b>` +
+              `<span class="cat-center-unit">SKU</span>`;
+            captionEl.textContent = `${focusCat} · ไม่มีรายการในขอบเขตนี้`;
+          } else {
+            centerEl.innerHTML =
+              `<b class="cat-center-num tabular">${fmt(total)}</b>` +
+              `<span class="cat-center-unit">SKU</span>`;
+            captionEl.textContent = `รวม ${categoryStats.length} หมวด`;
+          }
+        }
+
+        function toggleCategorySelection(catName) {
+          $('category').value = $('category').value === catName ? '' : catName;
+          if (catScope === 'active' && $('category').value) {
+            activeFilter = 'active';
+            syncActiveStatusPills();
+          } else if (catScope === 'stocked' && $('category').value) {
+            coverageFilter = 'stocked';
+            syncCoveragePills();
+          }
+          page = 1;
+          renderTable();
+          $('catalogPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function renderCategoryDistribution({ animate = false } = {}) {
+          categoryStats = computeCategoryStats(catScope);
+          const total = categoryStats.reduce((s, r) => s + r.n, 0);
+          const max = Math.max(1, ...categoryStats.map((r) => r.n));
+          const activeTotal = items.filter((x) => x.is_active !== false).length;
+          const stockedTotal = items.filter((x) => hasStockRecord(x.sku)).length;
+
+          $('catDistPill').textContent = `${categoryStats.length} หมวด`;
+          document.querySelectorAll('#catScopePills [data-cat-scope]').forEach((btn) => {
+            const s = btn.dataset.catScope;
+            btn.classList.toggle('active', s === catScope);
+            btn.setAttribute('aria-pressed', String(s === catScope));
+            if (s === 'all') btn.textContent = `ทั้งหมด (${items.length})`;
+            if (s === 'active') btn.textContent = `ใช้งานอยู่ (${activeTotal})`;
+            if (s === 'stocked') btn.textContent = `มีสต็อก (${stockedTotal})`;
+          });
+
+          if (!categoryStats.length) {
+            $('overviewBars').innerHTML =
+              '<div class="empty">ไม่พบข้อมูลหมวดหมู่ยาในขอบเขตที่เลือก</div>';
+            return;
+          }
+
+          const reducedMotion =
+            typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          const runAnim = Boolean(animate && !reducedMotion);
+
+          const r = 66;
+          const circ = 2 * Math.PI * r;
+          let offset = 0;
+          const slices = categoryStats
+            .map((x) => {
+              const len = (x.n / Math.max(1, total)) * circ;
+              const gap = categoryStats.length > 1 ? Math.min(2.2, len * 0.25) : 0;
+              const dashLen = Math.max(1.2, len - gap);
+              const targetOffset = -offset;
+              offset += len;
+              const initialOffset = runAnim ? circ : targetOffset;
+              const pct = ((x.n / Math.max(1, total)) * 100).toFixed(1);
+              return `<circle class="cat-slice" tabindex="0" role="button" data-cat-slice="${clean(x.label)}" data-filter-cat="${clean(x.label)}" aria-label="${clean(x.label)}: ${x.n} SKU (${pct}%)" aria-pressed="false" cx="90" cy="90" r="${r}" stroke="${clean(x.color)}" stroke-width="26" stroke-dasharray="${dashLen.toFixed(2)} ${circ.toFixed(2)}" data-target-offset="${targetOffset.toFixed(2)}" style="stroke-dashoffset:${initialOffset.toFixed(2)}"></circle>`;
+            })
+            .join('');
+
+          const bars = categoryStats
+            .map((x, idx) => {
+              const pct = ((x.n / Math.max(1, total)) * 100).toFixed(1);
+              const widthPct = Math.max(3, (x.n / max) * 100).toFixed(2);
+              const delayMs = Math.min(idx * 18, 260);
+              const stockNote =
+                x.active === 0 && x.inactive > 0
+                  ? `${pct}%`
+                  : x.stocked > 0
+                    ? `สต็อก ${x.stocked} · ${pct}%`
+                    : `${pct}%`;
+              return `<button type="button" class="cat-row-btn" data-filter-cat="${clean(x.label)}" aria-pressed="false" title="คลิกเพื่อกรองหมวด ${clean(x.label)}">
+                <span class="cat-row-top">
+                  <span class="cat-row-name">
+                    ${clean(x.label)}
+                    ${x.active === 0 && x.inactive > 0 ? '<span class="cat-inactive-chip">ปิดใช้งาน</span>' : ''}
+                  </span>
+                  <span class="cat-row-metrics">
+                    <span class="cat-row-meta">${clean(stockNote)}</span>
+                    <strong class="cat-row-count">${x.n}</strong>
+                  </span>
+                </span>
+                <span class="cat-row-track">
+                  <span class="cat-row-fill" style="background-color:${clean(x.color)};width:${widthPct}%;transition-delay:${delayMs}ms"></span>
+                </span>
+              </button>`;
+            })
+            .join('');
+
+          $('overviewBars').innerHTML = `
+            <div class="cat-dist-layout${runAnim ? ' is-animating' : ''}" id="catDistGrid">
+              <div class="cat-donut-stage">
+                <div class="cat-donut-box">
+                  <svg class="cat-donut-svg" width="192" height="192" viewBox="0 0 180 180" aria-label="สัดส่วนรายการยาตามหมวดหมู่">
+                    ${slices}
+                  </svg>
+                  <div class="cat-donut-center" id="catDonutCenter">
+                    <b class="cat-center-num tabular">${fmt(total)}</b>
+                    <span class="cat-center-unit">SKU</span>
+                  </div>
+                </div>
+                <div class="cat-donut-caption" id="catDonutCaption">รวม ${categoryStats.length} หมวด</div>
+                <button type="button" class="cat-clear-btn hide" id="catClearBtn">ล้างตัวกรองหมวด</button>
+              </div>
+              <div class="cat-bars-stage">
+                <div class="cat-bars-head">
+                  <span class="cat-bars-title">จำนวน SKU ตามหมวด</span>
+                  <span class="cat-bars-sub">สต็อก / สัดส่วน · SKU</span>
+                </div>
+                <div class="cat-bars-list">${bars}</div>
+              </div>
+            </div>
+          `;
+
+          const stage = $('overviewBars');
+          stage.querySelectorAll('[data-cat-slice], .cat-row-btn[data-filter-cat]').forEach((el) => {
+            const cat = el.dataset.catSlice || el.dataset.filterCat;
+            el.addEventListener('mouseenter', () => {
+              hoveredCategory = cat;
+              syncCategoryVisualState();
+            });
+            el.addEventListener('mouseleave', () => {
+              if (hoveredCategory === cat) {
+                hoveredCategory = '';
+                syncCategoryVisualState();
+              }
+            });
+            el.addEventListener('focus', () => {
+              hoveredCategory = cat;
+              syncCategoryVisualState();
+            });
+            el.addEventListener('blur', () => {
+              if (hoveredCategory === cat) {
+                hoveredCategory = '';
+                syncCategoryVisualState();
+              }
+            });
+            el.onclick = () => toggleCategorySelection(cat);
+            if (el.hasAttribute('data-cat-slice')) {
+              el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleCategorySelection(cat);
+                }
+              });
+            }
+          });
+
+          const clearBtn = $('catClearBtn');
+          if (clearBtn) {
+            clearBtn.onclick = () => {
+              $('category').value = '';
+              hoveredCategory = '';
               page = 1;
               renderTable();
-              $('catalogPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
             };
-          });
+          }
+
+          syncCategoryVisualState();
+
+          if (runAnim && typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                const grid = $('catDistGrid');
+                if (grid) grid.classList.remove('is-animating');
+                stage.querySelectorAll('[data-cat-slice]').forEach((slice) => {
+                  if (slice.dataset.targetOffset !== undefined) {
+                    slice.style.strokeDashoffset = slice.dataset.targetOffset;
+                  }
+                });
+              });
+            });
+          }
+        }
+
+        function bindChartFilters() {
           document.querySelectorAll('[data-filter-unit]').forEach((btn) => {
             btn.onclick = () => {
               const v = btn.dataset.filterUnit;
@@ -2443,12 +3019,9 @@
         }
 
         function syncChartActiveStates() {
-          const curCat = $('category').value;
           const curUnit = $('unit').value;
           const curAtc = $('atcLevel1').value;
-          document.querySelectorAll('[data-filter-cat]').forEach((b) => {
-            b.classList.toggle('active', b.dataset.filterCat === curCat && curCat !== '');
-          });
+          syncCategoryVisualState();
           document.querySelectorAll('[data-filter-unit]').forEach((b) => {
             b.classList.toggle('active', b.dataset.filterUnit === curUnit && curUnit !== '');
           });
@@ -2923,6 +3496,7 @@
           }
 
           categories = countBy('category');
+          catColorMap = new Map(categories.map((c, idx) => [c.label, CAT_PALETTE[idx % CAT_PALETTE.length]]));
           units = countBy('unit');
           dosageForms = countBy('dosage_form');
           atcCount = (() => {
@@ -2948,7 +3522,6 @@
           $('heroSubtitle').textContent =
             `วิเคราะห์ทะเบียนยา ${items.length} SKU · ${categories.length} หมวดหมู่ · ${uniq('generic_name')} ชื่อสามัญ · ${dosageForms.length} รูปแบบยา · ${units.length} หน่วยนับ · เชื่อมต่อข้อมูลสดจาก Supabase`;
           $('catalogUpdatedBadge').textContent = asOf ? `Snapshot ${asOf}` : 'Supabase Live';
-          $('catDistPill').textContent = `${categories.length} Categories`;
           $('unitDistPill').textContent = `${units.length} Units`;
           $('repeatsCountPill').textContent = `${repeats.length} ชื่อสามัญ`;
 
@@ -2996,7 +3569,7 @@
             atcCount.map((a) => [`${a.label} — ${ATC_NAMES[a.label] || 'Other'} (${a.n})`, a.label])
           );
 
-          $('overviewBars').innerHTML = renderBarButtons(categories, 'data-filter-cat');
+          renderCategoryDistribution({ animate: true });
           $('overviewDonut').innerHTML = renderDonutSvg(units);
           $('unitBars').innerHTML = renderBarButtons(units, 'data-filter-unit');
           $('atcBars').innerHTML = renderBarButtons(
@@ -3098,6 +3671,7 @@
           $('catalogSort').value = 'sku';
           coverageFilter = '';
           activeFilter = '';
+          hoveredCategory = '';
           syncCoveragePills();
           syncActiveStatusPills();
           page = 1;
@@ -3129,6 +3703,15 @@
 
         document.querySelectorAll('[data-mode]').forEach((b) => {
           b.onclick = () => switchMode(b.dataset.mode);
+        });
+
+        $('catReplayBtn').onclick = () => renderCategoryDistribution({ animate: true });
+        document.querySelectorAll('#catScopePills [data-cat-scope]').forEach((btn) => {
+          btn.onclick = () => {
+            catScope = btn.dataset.catScope;
+            hoveredCategory = '';
+            renderCategoryDistribution({ animate: true });
+          };
         });
 
         $('mobileMenuBtn').onclick = () => {
