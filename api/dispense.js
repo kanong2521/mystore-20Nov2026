@@ -16,8 +16,8 @@ module.exports = async (req, res) => {
   b = b || {};
   const sku = String(b.sku ?? '').trim();
   const qty = Number(b.qty);
-  const patient = String(b.patient_code ?? '').trim();
-  const pharmacist = String(b.pharmacist_code ?? '').trim();
+  const patient = String(b.patient_code ?? '').trim().toUpperCase();
+  const pharmacist = String(b.pharmacist_code ?? '').trim().toUpperCase();
   if (!sku || !Number.isInteger(qty) || qty <= 0 || !patient || !pharmacist) {
     return res.status(400).json({ ok: false, message: 'ข้อมูลไม่ครบ: ต้องมียา จำนวนเต็มมากกว่า 0 รหัสผู้ป่วย และรหัสเภสัชกร' });
   }

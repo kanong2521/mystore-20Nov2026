@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#1e3932" />
     <meta
       name="description"
-      content="หน้าจัดการระบบสำหรับผู้ดูแลและผู้ปฏิบัติงาน — บัญชียา คลังรายล็อต รายการจ่าย คืนยา ยกเลิก และติดตามความปลอดภัย"
+      content="หน้าจัดการระบบสำหรับผู้ดูแลและผู้ปฏิบัติงาน · บัญชียา คลังรายล็อต รายการจ่าย คืนยา ยกเลิก ผู้ปฏิบัติงาน และ change_log"
     />
     <title>จัดการระบบ (ผู้ดูแล) | ระบบบริหารคลังยาและจ่ายยา</title>
     <link
@@ -241,6 +241,8 @@
       .btn.sm { min-height: 36px; padding: 5px 14px; font-size: 14px; }
       .btn:active:not(:disabled) { transform: scale(0.95); }
       .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+      .btn.is-locked { opacity: 0.56; }
+      .btn.is-locked:active { transform: none; }
       .btn.primary,
       .btn-primary { background: var(--sb-accent); color: var(--sb-white); border-color: var(--sb-accent); }
       .btn.primary:hover:not(:disabled),
@@ -335,6 +337,32 @@
         border-color: var(--sb-green-light);
         box-shadow: 0 0 0 2px rgba(212, 233, 226, 0.28);
       }
+      .pw-wrap {
+        position: relative;
+        width: 100%;
+        display: flex;
+        align-items: center;
+      }
+      .pw-wrap input { padding-right: 44px; width: 100%; }
+      .pw-toggle {
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.84);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+      }
+      .pw-toggle:hover { background: rgba(255, 255, 255, 0.14); }
+      .reauth .pw-toggle { color: var(--sb-text-soft); }
+      .reauth .pw-toggle:hover { background: rgba(0, 0, 0, 0.06); }
       .cred-actions {
         display: flex;
         gap: 8px;
@@ -347,6 +375,32 @@
         justify-content: space-between;
         gap: 10px;
         flex-wrap: wrap;
+      }
+      .cred-status-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        min-width: 0;
+      }
+      .auth-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 12px;
+        border-radius: var(--sb-btn-radius);
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .auth-pill.ok {
+        background: var(--sb-green-light);
+        color: var(--sb-house);
+      }
+      .auth-pill.locked {
+        background: rgba(255, 217, 160, 0.22);
+        color: #ffd9a0;
+        border: 1px solid rgba(255, 217, 160, 0.45);
       }
       .cred-status {
         font-size: 14px;
@@ -617,6 +671,17 @@
       }
       .user-quick-note { font-size: 14.5px; color: var(--sb-text); max-width: 72ch; }
       .user-quick-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+      .section-split {
+        margin-top: 28px;
+        padding-top: 22px;
+        border-top: 1px solid var(--sb-hairline);
+      }
+      .section-split h3 {
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--sb-house);
+        margin-bottom: 4px;
+      }
 
       /* กล่องยืนยัน (dialog) */
       dialog {
@@ -801,53 +866,54 @@
           <span class="mobile-asof-pill tabular" id="heroAsOfMobile">วันอ้างอิง …</span>
         </div>
 
-        <div class="cred-card">
+        <div class="cred-card" id="cred-card">
           <form id="cred-form" class="creds" autocomplete="off" novalidate>
             <div class="field">
-              <label for="admin-code">รหัสผู้ดูแล (<span translate="no">ADMIN_CODE</span>)</label>
-              <input
-                id="admin-code"
-                type="password"
-                placeholder="กรอกรหัสผู้ดูแล"
-                autocomplete="off"
-                spellcheck="false"
-              />
+              <label for="admin-code">กุญแจผู้ดูแลระบบ (<span translate="no">ADMIN_CODE</span>)</label>
+              <div class="pw-wrap">
+                <input
+                  id="admin-code"
+                  type="password"
+                  placeholder="กรอกกุญแจผู้ดูแล"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <button
+                  type="button"
+                  class="pw-toggle"
+                  id="toggle-admin-pw"
+                  aria-label="แสดงหรือซ่อนรหัสผู้ดูแล"
+                  aria-pressed="false"
+                ></button>
+              </div>
             </div>
             <div class="field">
-              <label for="rx-code">รหัสเภสัชกรผู้บันทึก</label>
+              <label for="rx-code">ผู้ปฏิบัติงานผู้บันทึก (<span translate="no">User Code</span>)</label>
               <input
                 id="rx-code"
                 type="text"
+                list="staff-datalist"
                 placeholder="เช่น RX-01"
                 autocomplete="off"
                 spellcheck="false"
               />
+              <datalist id="staff-datalist"></datalist>
             </div>
             <div class="cred-actions">
-              <button type="submit" class="btn btn-inverted sm">บันทึกรหัส</button>
+              <button type="submit" id="cred-submit" class="btn btn-inverted sm">ตรวจสอบและปลดล็อก</button>
               <button type="button" id="cred-clear" class="btn btn-outline-white sm">ล้างรหัส</button>
             </div>
           </form>
           <div class="cred-foot">
-            <p id="cred-status" class="cred-status" role="status" aria-live="polite"></p>
+            <div class="cred-status-group">
+              <span class="auth-pill locked" id="auth-pill">ล็อกอยู่ (อ่านอย่างเดียว)</span>
+              <p id="cred-status" class="cred-status" role="status" aria-live="polite"></p>
+            </div>
             <a class="btn btn-outline-white sm" href="./status.html#code">ตรวจสิทธิ์ไฟ 5 ดวง</a>
           </div>
         </div>
       </div>
     </section>
-
-    <div id="lock-note" class="lock-bar" role="note">
-      <div class="lock-bar-inner">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-        <span>
-          ยังไม่ได้บันทึกรหัสผู้ดูแลและรหัสเภสัชกร ปุ่มแก้ไขข้อมูลจึงถูกปิดไว้ ดูข้อมูลได้ตามปกติ
-          กรอกทั้งสองช่องด้านบนแล้วกด "บันทึกรหัส" หรือเลือกรหัสจากแท็บ "ผู้ปฏิบัติงาน" เพื่อเปิดใช้
-        </span>
-      </div>
-    </div>
 
     <div id="date-drift-bar" class="lock-bar" role="status" aria-live="polite" hidden>
       <div class="lock-bar-inner" style="justify-content:space-between;flex-wrap:wrap">
@@ -916,7 +982,7 @@
             aria-selected="false"
             tabindex="-1"
           >
-            ผู้ปฏิบัติงาน (รหัสเภสัชกร) <span class="n" id="n-users"></span>
+            ผู้ปฏิบัติงานและประวัติ <span class="n" id="n-users"></span>
           </button>
         </div>
 
@@ -1055,16 +1121,16 @@
           </div>
         </section>
 
-        <!-- แท็บ 4: ผู้ปฏิบัติงาน (รหัสเภสัชกร & สิทธิ์ผู้ดูแล) -->
+        <!-- แท็บ 4: ผู้ปฏิบัติงาน (staff_users) & ตั้งค่าวันอ้างอิง & ประวัติ change_log -->
         <section class="panel" role="tabpanel" id="panel-users" aria-labelledby="tab-users" hidden>
           <div class="panel-head">
             <div>
-              <h2>ผู้ปฏิบัติงาน (รหัสเภสัชกร) และสิทธิ์ผู้ดูแล</h2>
+              <h2>ผู้ปฏิบัติงาน (<span translate="no">staff_users</span>) และสิทธิ์ผู้ดูแล</h2>
               <p class="panel-sub">
-                สรุปรหัสเภสัชกรที่ปรากฏในฐานข้อมูลจริง เลือกสวมสิทธิ์ผู้บันทึกสำหรับเซสชันปัจจุบัน
+                เพิ่ม แก้ไข เปิด/ปิดผู้ปฏิบัติงาน เลือกผู้บันทึกในเซสชัน ตั้งค่าวันอ้างอิง และตรวจประวัติ <span translate="no">change_log</span>
               </p>
             </div>
-            <span class="count tabular" id="users-count"></span>
+            <button type="button" class="btn primary" id="btn-add-staff" data-write>เพิ่มผู้ปฏิบัติงาน</button>
           </div>
 
           <div class="user-summary-grid" aria-live="polite">
@@ -1096,6 +1162,7 @@
               <strong class="tabular" id="cfgAsOfDisplay">-</strong> · วันปัจจุบันฝั่งเซิร์ฟเวอร์ (<span translate="no">Asia/Bangkok</span>):
               <strong class="tabular" id="cfgServerTodayDisplay">-</strong>
               <span class="badge b-active" id="cfgDateMatchBadge" style="margin-left:8px">กำลังตรวจ</span>
+              <span class="badge b-written_off" id="cfgAutoBadge" style="margin-left:6px">โหมดวันอ้างอิง</span>
             </div>
             <div class="user-quick-actions">
               <button type="button" class="btn primary sm" id="btn-sync-today" data-write>อัปเดตเป็นวันปัจจุบัน</button>
@@ -1103,13 +1170,26 @@
             </div>
           </div>
 
+          <div
+            class="user-quick-bar"
+            id="staff-setup-note"
+            style="background:var(--sb-gold-lightest);border-color:var(--sb-gold);color:var(--sb-gold-ink)"
+            hidden
+          >
+            <p class="user-quick-note" style="color:var(--sb-gold-ink)">
+              <strong>ยังไม่ได้ติดตั้งตาราง <code translate="no">staff_users</code> ใน Supabase:</strong>
+              กำลังแสดงรายชื่อผู้ปฏิบัติงานที่สรุปจากประวัติการจ่ายยาชั่วคราว รันไฟล์
+              <code translate="no">sql/08_combined_apply_supabase.sql</code> ใน Supabase SQL Editor เพื่อเปิดใช้การเพิ่ม แก้ไข และซ่อมวันเวลาจริงย้อนหลัง
+            </p>
+          </div>
+
           <div class="user-quick-bar">
             <p class="user-quick-note">
-              ระบบนี้ใช้รหัสผู้ดูแลกลาง (<code translate="no">ADMIN_CODE</code>) ร่วมกับรหัสเภสัชกรผู้บันทึก
-              (<code translate="no">by</code>) เพื่อบันทึกลง <code translate="no">change_log</code>
-              ในทุกธุรกรรม (ไม่มีการเก็บรหัสผ่านในฐานข้อมูลหน้าเว็บ และล้างสิทธิ์ทันทีเมื่อปิดแท็บ)
+              ระบบแยก <strong>กุญแจผู้ดูแล (<code translate="no">ADMIN_CODE</code>)</strong> ออกจาก
+              <strong>ผู้ปฏิบัติงาน (<code translate="no">User Code</code>)</strong> เพื่อบันทึกชื่อผู้ทำรายการลง <code translate="no">change_log</code> ทุกครั้ง
             </p>
             <div class="user-quick-actions">
+              <span class="count tabular" id="users-count" style="margin-left:0"></span>
               <button type="button" class="btn secondary sm" id="jumpQuarantineBtn">ดูล็อตกักกัน</button>
               <button type="button" class="btn secondary sm" id="jumpInactiveBtn">ดูยาปิดใช้งาน</button>
               <button type="button" class="btn danger sm" id="clearCredUsersBtn">ล้างสิทธิ์ทันที</button>
@@ -1120,32 +1200,75 @@
             <table>
               <thead>
                 <tr>
-                  <th>รหัสเภสัชกร</th>
-                  <th class="num">จ่ายยา (ครั้ง)</th>
-                  <th class="num">รับคืน (ครั้ง)</th>
-                  <th class="num">ยกเลิก (ครั้ง)</th>
-                  <th class="num">ยอดจ่ายรวม</th>
+                  <th>รหัสผู้ปฏิบัติงาน</th>
+                  <th>ชื่อ-สกุล / ใบอนุญาต</th>
+                  <th>บทบาท</th>
+                  <th>สถิติงาน (จ่าย / คืน / ยกเลิก)</th>
                   <th>ทำรายการล่าสุด</th>
-                  <th>เลือกใช้งาน</th>
+                  <th>สถานะ</th>
+                  <th>จัดการ</th>
                 </tr>
               </thead>
               <tbody id="users-body"></tbody>
             </table>
           </div>
+
+          <div class="section-split" id="audit-trail-section">
+            <div class="panel-head" style="margin-bottom:12px">
+              <div>
+                <h3>ประวัติการแก้ไขระบบ (<span translate="no">change_log</span> ล่าสุด)</h3>
+                <p class="panel-sub">บันทึกการเปลี่ยนแปลงจากฐานข้อมูลและผู้ดูแล อ่านแบบเรียลไทม์จาก Supabase</p>
+              </div>
+              <span class="count tabular" id="chg-count"></span>
+            </div>
+            <div class="toolbar">
+              <div class="field search-field">
+                <label for="chg-q">ค้นหา (รหัสรายการ / ตาราง / ผู้บันทึก / เหตุผล)</label>
+                <input id="chg-q" type="search" placeholder="เช่น RX-01, D0153, as_of หรือ staff_users" />
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Log ID</th>
+                    <th>วันที่แก้</th>
+                    <th>ผู้บันทึก</th>
+                    <th>ตาราง / รายการ</th>
+                    <th>ฟิลด์และค่าเปลี่ยน</th>
+                    <th>เหตุผลและสถานะ</th>
+                  </tr>
+                </thead>
+                <tbody id="chg-body"></tbody>
+              </table>
+            </div>
+            <div class="more-row">
+              <button type="button" class="btn secondary" id="chg-more" hidden>แสดงประวัติเพิ่ม</button>
+            </div>
+          </div>
         </section>
       </div>
     </main>
 
-    <!-- กล่องยืนยันคำสั่งทั้ง 8 รูปแบบและยืนยันรหัสใหม่เมื่อ 401 -->
+    <!-- กล่องยืนยันคำสั่งและยืนยันรหัสใหม่เมื่อ 401 -->
     <dialog id="dlg" aria-labelledby="dlg-title">
       <form id="dlg-form" class="dlg-body" novalidate>
         <h3 id="dlg-title"></h3>
         <p id="dlg-summary" class="dlg-summary"></p>
         <div id="dlg-fields" class="dlg-fields"></div>
         <div id="dlg-reauth" class="reauth" hidden>
-          <label for="dlg-reauth-input">รหัสผู้ดูแลใหม่ <span class="req">*</span></label>
-          <input id="dlg-reauth-input" type="password" autocomplete="off" spellcheck="false" />
-          <span class="hint">กรอกแล้วกด "ยืนยัน" อีกครั้ง ระบบจะบันทึกรหัสใหม่และส่งรายการนี้ซ้ำ</span>
+          <label for="dlg-reauth-input">กุญแจผู้ดูแลใหม่ <span class="req">*</span></label>
+          <div class="pw-wrap">
+            <input id="dlg-reauth-input" type="password" autocomplete="off" spellcheck="false" />
+            <button
+              type="button"
+              class="pw-toggle"
+              id="toggle-reauth-pw"
+              aria-label="แสดงหรือซ่อนกุญแจผู้ดูแลใหม่"
+              aria-pressed="false"
+            ></button>
+          </div>
+          <span class="hint">กรอกแล้วกด "ยืนยัน" อีกครั้ง ระบบจะตรวจสอบและส่งรายการนี้ซ้ำ</span>
         </div>
         <p id="dlg-error" class="dlg-error" role="alert" hidden></p>
         <div class="dlg-actions">
@@ -1189,11 +1312,13 @@
         const KEY_ADMIN = 'rx_admin_code';
         const KEY_RX = 'rx_pharmacist_code';
         const NET_ERR = 'เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้ง';
-        const LOCK_MSG = 'กรอกรหัสผู้ดูแลและรหัสเภสัชกร แล้วกด "บันทึกรหัส" ก่อน';
+        const LOCK_MSG = 'กรอกกุญแจผู้ดูแล (ADMIN_CODE) และรหัสผู้ปฏิบัติงาน แล้วกด "ตรวจสอบและปลดล็อก"';
         const LOG_PAGE = 50;
+        const CHG_PAGE = 30;
 
         const STATUS_LABEL = { active: 'ใช้ได้', quarantine: 'กักไว้', written_off: 'ตัดจำหน่าย' };
         const TYPE_LABEL = { dispense: 'จ่าย', return: 'คืน', void: 'ยกเลิก' };
+        const ROLE_LABEL = { pharmacist: 'เภสัชกร', assistant: 'ผู้ช่วยเภสัชกร', admin: 'ผู้ดูแลระบบ' };
         const DRUG_FIELD_LABEL = {
           sku: 'รหัสยา',
           generic_name: 'ชื่อสามัญ',
@@ -1204,16 +1329,29 @@
           atc_code: 'รหัส ATC',
           reorder_level: 'จุดสั่งซื้อ'
         };
+        const STAFF_FIELD_LABEL = {
+          user_code: 'รหัสผู้ปฏิบัติงาน',
+          full_name: 'ชื่อ-สกุล',
+          role: 'บทบาท',
+          license_no: 'เลขใบอนุญาต'
+        };
 
         const state = {
           asOf: null,
           serverToday: null,
+          autoRealtime: false,
           catalog: [],
           stock: [],
           log: [],
           incidents: [],
+          staffUsers: [],
+          staffUsersReady: false,
+          changeLog: [],
           drugBySku: new Map(),
           logShown: LOG_PAGE,
+          chgShown: CHG_PAGE,
+          authVerified: false,
+          authVerifying: false,
           loadedOnce: false,
           halted: false,
           syncSeq: 0
@@ -1289,8 +1427,55 @@
         }
         function canWrite() {
           const c = creds();
-          return Boolean(c.admin && c.by);
+          return Boolean(state.authVerified && c.admin && c.by);
         }
+
+        function buildEyeSvg(visible) {
+          const NS = 'http://www.w3.org/2000/svg';
+          const svg = document.createElementNS(NS, 'svg');
+          svg.setAttribute('width', '18');
+          svg.setAttribute('height', '18');
+          svg.setAttribute('viewBox', '0 0 24 24');
+          svg.setAttribute('fill', 'none');
+          svg.setAttribute('stroke', 'currentColor');
+          svg.setAttribute('stroke-width', '2');
+          svg.setAttribute('stroke-linecap', 'round');
+          svg.setAttribute('stroke-linejoin', 'round');
+          svg.setAttribute('aria-hidden', 'true');
+          const p1 = document.createElementNS(NS, 'path');
+          p1.setAttribute('d', 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z');
+          svg.appendChild(p1);
+          const c = document.createElementNS(NS, 'circle');
+          c.setAttribute('cx', '12');
+          c.setAttribute('cy', '12');
+          c.setAttribute('r', '3');
+          svg.appendChild(c);
+          if (visible) {
+            const p2 = document.createElementNS(NS, 'path');
+            p2.setAttribute('d', 'M3 3l18 18');
+            svg.appendChild(p2);
+          }
+          return svg;
+        }
+
+        function wirePwToggle(btnSel, inputSel) {
+          const btn = $(btnSel);
+          const inp = $(inputSel);
+          if (!btn || !inp) return;
+          const draw = () => {
+            const visible = inp.type === 'text';
+            btn.setAttribute('aria-pressed', String(visible));
+            btn.replaceChildren(buildEyeSvg(visible));
+          };
+          draw();
+          btn.addEventListener('click', () => {
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+            draw();
+            inp.focus();
+          });
+        }
+        wirePwToggle('#toggle-admin-pw', '#admin-code');
+        wirePwToggle('#toggle-reauth-pw', '#dlg-reauth-input');
 
         // =========================================================
         // จัดรูปแบบตัวเลขและวันที่ (อ้างอิงสตริง YYYY-MM-DD จากเซิร์ฟเวอร์เท่านั้น)
@@ -1358,75 +1543,172 @@
         }
 
         // =========================================================
-        // ล็อก/ปลดล็อกปุ่มแก้ไขและซิงก์สถานะสิทธิ์
+        // ล็อก/ปลดล็อกปุ่มแก้ไขและตรวจสอบสิทธิ์ผ่านเซิร์ฟเวอร์ (auth_verify)
         // =========================================================
         function updateLock() {
           const ok = canWrite();
           document.querySelectorAll('[data-write]').forEach((b) => {
-            b.disabled = !ok;
-            if (ok) b.removeAttribute('title');
-            else b.title = LOCK_MSG;
+            b.classList.toggle('is-locked', !ok);
+            b.setAttribute('aria-disabled', String(!ok));
+            if (b.id === 'btn-add-staff' && ok && state.loadedOnce && !state.staffUsersReady) {
+              b.title = 'ต้องติดตั้ง sql/08_combined_apply_supabase.sql ใน Supabase ก่อนเพิ่มผู้ปฏิบัติงาน';
+            } else if (ok) {
+              b.removeAttribute('title');
+            } else {
+              b.title = LOCK_MSG;
+            }
           });
-          $('#lock-note').hidden = ok;
+          const pill = $('#auth-pill');
+          if (pill) {
+            pill.textContent = ok ? 'ปลดล็อกแล้ว · แก้ไขได้' : 'ล็อกอยู่ (อ่านอย่างเดียว)';
+            pill.className = 'auth-pill ' + (ok ? 'ok' : 'locked');
+          }
           updateCredStatus();
           renderUsersSummaryOnly();
         }
 
-        function updateCredStatus() {
+        function updateCredStatus(overrideMsg, isWarn) {
           const c = creds();
           const st = $('#cred-status');
           const typedAdmin = $('#admin-code').value;
           const typedRx = $('#rx-code').value.trim().toUpperCase();
           st.classList.remove('warn');
-          if (c.admin && c.by) {
+          if (overrideMsg) {
+            st.textContent = overrideMsg;
+            if (isWarn) st.classList.add('warn');
+            return;
+          }
+          if (state.authVerifying) {
+            st.textContent = 'กำลังตรวจสอบกุญแจผู้ดูแลกับเซิร์ฟเวอร์…';
+            return;
+          }
+          if (canWrite()) {
             if (typedAdmin !== c.admin || typedRx !== c.by) {
               st.textContent =
-                'มีการแก้รหัสที่ยังไม่บันทึก กด "บันทึกรหัส" เพื่อใช้ค่าใหม่ (ตอนนี้ใช้ผู้บันทึก ' + c.by + ')';
+                'มีการแก้ค่าที่ยังไม่ตรวจสอบ กด "ตรวจสอบและปลดล็อก" เพื่อยืนยันค่าใหม่ (ผู้บันทึกปัจจุบัน ' + c.by + ')';
               st.classList.add('warn');
             } else {
-              st.textContent = 'บันทึกรหัสแล้ว · ผู้บันทึก ' + c.by;
+              st.textContent = 'ยืนยันสิทธิ์กับเซิร์ฟเวอร์แล้ว · ผู้บันทึก ' + c.by;
             }
-          } else if (c.by) {
-            st.textContent = 'เลือกรหัสเภสัชกร ' + c.by + ' แล้ว กรอกรหัสผู้ดูแลแล้วกด "บันทึกรหัส"';
+          } else if (c.by || typedRx) {
+            st.textContent =
+              'เลือกผู้ปฏิบัติงาน ' + (typedRx || c.by) + ' แล้ว กรอกกุญแจผู้ดูแลแล้วกด "ตรวจสอบและปลดล็อก"';
             st.classList.add('warn');
           } else {
-            st.textContent = 'ยังไม่ได้บันทึกรหัสผู้ดูแลและรหัสเภสัชกร';
+            st.textContent = 'โหมดอ่านอย่างเดียว · กรอกกุญแจผู้ดูแลและรหัสผู้ปฏิบัติงานเพื่อปลดล็อก';
             st.classList.add('warn');
           }
         }
 
+        function promptUnlock() {
+          const card = $('#cred-card');
+          if (card && typeof card.scrollIntoView === 'function') {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          updateCredStatus('โหมดอ่านอย่างเดียว · ' + LOCK_MSG, true);
+          const target = !$('#admin-code').value.trim() ? $('#admin-code') : $('#rx-code');
+          if (target) target.focus();
+        }
+
+        // ดักจับการคลิกปุ่มแก้ไขขณะล็อกบนทุกอุปกรณ์ เพื่อพาไปกรอกรหัสแทนปุ่มเงียบที่กดไม่ติด
+        document.addEventListener(
+          'click',
+          (ev) => {
+            const btn = ev.target && ev.target.closest ? ev.target.closest('[data-write]') : null;
+            if (btn && !canWrite()) {
+              ev.preventDefault();
+              ev.stopPropagation();
+              promptUnlock();
+            }
+          },
+          true
+        );
+
         function clearCredentials() {
           ssDel(KEY_ADMIN);
           ssDel(KEY_RX);
+          state.authVerified = false;
           $('#admin-code').value = '';
           $('#rx-code').value = '';
           updateLock();
         }
 
-        $('#cred-form').addEventListener('submit', (e) => {
+        async function verifyCredentials(admin, rx, { silent = false } = {}) {
+          const submitBtn = $('#cred-submit');
+          state.authVerifying = true;
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'กำลังตรวจ…';
+          }
+          updateCredStatus();
+
+          const r = await postAdmin({ action: 'auth_verify', by: rx }, admin);
+          state.authVerifying = false;
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'ตรวจสอบและปลดล็อก';
+          }
+
+          if (r.ok && r.data?.verified) {
+            const normalizedBy = str(r.data.by || rx).trim().toUpperCase();
+            state.authVerified = true;
+            ssSet(KEY_ADMIN, admin);
+            ssSet(KEY_RX, normalizedBy);
+            $('#rx-code').value = normalizedBy;
+            updateLock();
+            renderUsers();
+            if (!silent) showToast('ยืนยันสิทธิ์ผู้ดูแลสำเร็จ · ผู้บันทึก ' + normalizedBy);
+            return true;
+          }
+
+          state.authVerified = false;
+          if (r.status === 401) {
+            ssDel(KEY_ADMIN);
+            $('#admin-code').value = '';
+          }
+          updateLock();
+          renderUsers();
+          updateCredStatus(
+            r.status === 401 && silent
+              ? 'รหัสผู้ดูแลที่ค้างในเซสชันไม่ถูกต้อง กรุณากรอกกุญแจผู้ดูแลใหม่'
+              : r.message || 'ตรวจสอบสิทธิ์ไม่สำเร็จ',
+            true
+          );
+          if (!silent && r.status === 401) $('#admin-code').focus();
+          return false;
+        }
+
+        $('#cred-form').addEventListener('submit', async (e) => {
           e.preventDefault();
+          if (state.authVerifying) return;
           const admin = $('#admin-code').value;
           const rx = $('#rx-code').value.trim().toUpperCase();
           $('#rx-code').value = rx;
           if (!admin.trim() || !rx) {
-            const st = $('#cred-status');
-            st.textContent = 'กรอกให้ครบทั้งรหัสผู้ดูแลและรหัสเภสัชกร';
-            st.classList.add('warn');
+            updateCredStatus('กรอกให้ครบทั้งกุญแจผู้ดูแลและรหัสผู้ปฏิบัติงาน', true);
             (!admin.trim() ? $('#admin-code') : $('#rx-code')).focus();
             return;
           }
-          ssSet(KEY_ADMIN, admin);
-          ssSet(KEY_RX, rx);
-          updateLock();
-          renderUsers();
+          if (!/^[A-Z0-9_-]{2,20}$/.test(rx)) {
+            updateCredStatus('รหัสผู้ปฏิบัติงานต้องใช้ A-Z 0-9 หรือ -/_ ยาว 2-20 ตัว (เช่น RX-01)', true);
+            $('#rx-code').focus();
+            return;
+          }
+          const matchedStaff = state.staffUsers.find((u) => str(u.user_code).toUpperCase() === rx);
+          if (matchedStaff && !isTrue(matchedStaff.is_active)) {
+            updateCredStatus('รหัสผู้ปฏิบัติงาน ' + rx + ' ถูกปิดใช้งานอยู่ กรุณาใช้รหัสอื่นที่เปิดใช้งาน', true);
+            $('#rx-code').focus();
+            return;
+          }
+          await verifyCredentials(admin, rx, { silent: false });
         });
 
         $('#cred-clear').addEventListener('click', () => {
           clearCredentials();
           renderUsers();
         });
-        $('#admin-code').addEventListener('input', updateCredStatus);
-        $('#rx-code').addEventListener('input', updateCredStatus);
+        $('#admin-code').addEventListener('input', () => updateCredStatus());
+        $('#rx-code').addEventListener('input', () => updateCredStatus());
 
         // =========================================================
         // โหลดข้อมูลล่าสุดจาก GET /api/data
@@ -1498,12 +1780,18 @@
               metaServerToday(json.stock) ||
               metaServerToday(json.dispense_log)
           );
+          state.autoRealtime = Boolean(json.drugs?.meta?.auto_realtime ?? json.stock?.meta?.auto_realtime);
           state.catalog = items(json.catalog);
           state.stock = items(json.stock);
           state.log = items(json.dispense_log);
           state.incidents = items(json.incidents);
+          state.staffUsers = items(json.staff_users);
+          state.staffUsersReady = json.staff_users_ready === true;
+          state.changeLog = items(json.change_log);
           state.drugBySku = new Map(state.catalog.map((d) => [d.sku, d]));
           state.loadedOnce = true;
+
+          rebuildStaffDatalist();
 
           const asOfLabel = state.asOf ? 'วันอ้างอิง ' + fmtThaiDate(state.asOf) : 'วันอ้างอิง ไม่ทราบ';
           $('#asOfChip').textContent = asOfLabel;
@@ -1550,6 +1838,7 @@
           renderStock();
           renderLog();
           renderUsers();
+          renderChangeLog();
           updateLock();
         }
 
@@ -1566,9 +1855,9 @@
           const ok = canWrite();
           return el('button', {
             type: 'button',
-            class: 'btn sm ' + variant,
+            class: 'btn sm ' + variant + (ok ? '' : ' is-locked'),
             'data-write': true,
-            disabled: !ok,
+            'aria-disabled': ok ? 'false' : 'true',
             title: ok ? null : LOCK_MSG,
             onclick: onClick,
             text: label
@@ -1833,9 +2122,9 @@
         });
 
         // =========================================================
-        // แท็บ 4: ผู้ปฏิบัติงาน (รหัสเภสัชกรและสรุปความปลอดภัย)
+        // แท็บ 4: ผู้ปฏิบัติงาน (staff_users) & ตั้งค่าวันอ้างอิง & ประวัติ change_log
         // =========================================================
-        function buildOperatorDirectory() {
+        function computeOperatorStatsMap() {
           const map = new Map();
           for (const row of state.log) {
             const rawCode = str(row.pharmacist_code).trim();
@@ -1855,12 +2144,56 @@
             const dt = str(row.datetime).slice(0, 19);
             if (dt && dt > entry.lastDt) entry.lastDt = dt;
           }
-          return [...map.values()].sort((a, b) => {
-            const totalA = a.dispense + a.return + a.void;
-            const totalB = b.dispense + b.return + b.void;
-            if (totalB !== totalA) return totalB - totalA;
-            return a.code.localeCompare(b.code, 'en', { numeric: true });
-          });
+          return map;
+        }
+
+        function buildStaffDirectory() {
+          const statsMap = computeOperatorStatsMap();
+          if (state.staffUsersReady) {
+            return state.staffUsers
+              .map((u) => {
+                const code = str(u.user_code).trim().toUpperCase();
+                const st = statsMap.get(code) || { dispense: 0, return: 0, void: 0, totalQty: 0, lastDt: '' };
+                return {
+                  user_code: code,
+                  full_name: str(u.full_name || code),
+                  role: str(u.role || 'pharmacist'),
+                  license_no: u.license_no ? str(u.license_no) : '',
+                  is_active: isTrue(u.is_active),
+                  fromTable: true,
+                  ...st
+                };
+              })
+              .sort((a, b) => {
+                if (a.is_active !== b.is_active) return a.is_active ? -1 : 1;
+                return a.user_code.localeCompare(b.user_code, 'en', { numeric: true });
+              });
+          }
+          return [...statsMap.values()]
+            .map((st) => ({
+              user_code: st.code,
+              full_name: 'รหัสจากประวัติจ่าย (' + st.code + ')',
+              role: 'pharmacist',
+              license_no: '',
+              is_active: true,
+              fromTable: false,
+              ...st
+            }))
+            .sort((a, b) => {
+              const totalA = a.dispense + a.return + a.void;
+              const totalB = b.dispense + b.return + b.void;
+              if (totalB !== totalA) return totalB - totalA;
+              return a.user_code.localeCompare(b.user_code, 'en', { numeric: true });
+            });
+        }
+
+        function rebuildStaffDatalist() {
+          const dl = $('#staff-datalist');
+          if (!dl) return;
+          const list = buildStaffDirectory().filter((u) => u.is_active);
+          dl.replaceChildren(
+            ...list.map((u) => el('option', { value: u.user_code, label: u.fromTable ? u.full_name : u.user_code }))
+          );
         }
 
         function renderUsersSummaryOnly() {
@@ -1869,10 +2202,11 @@
           const inactiveCount = state.catalog.filter((d) => !isTrue(d.is_active)).length;
           const openIncidentsCount = state.incidents.filter((i) => str(i.status) === 'open').length;
 
-          $('#userSessionRx').textContent = c.by || 'ยังไม่ระบุ';
+          $('#userSessionRx').textContent = c.by || $('#rx-code').value.trim().toUpperCase() || 'ยังไม่ระบุ';
           const authEl = $('#userSessionAuth');
-          authEl.textContent = c.admin && c.by ? 'ปลดล็อกแล้ว' : 'ล็อกอยู่';
-          authEl.className = 'u-stat-val' + (c.admin && c.by ? '' : ' warn');
+          const unlocked = canWrite();
+          authEl.textContent = unlocked ? 'ปลดล็อกแล้ว' : 'ล็อกอยู่';
+          authEl.className = 'u-stat-val' + (unlocked ? '' : ' warn');
 
           const qEl = $('#sumQuarantine');
           qEl.textContent = fmtInt(quarantineCount);
@@ -1897,6 +2231,11 @@
             badgeEl.textContent = 'กำลังตรวจ';
             badgeEl.className = 'badge b-written_off';
           }
+          const autoEl = $('#cfgAutoBadge');
+          if (autoEl) {
+            autoEl.textContent = state.autoRealtime ? 'โหมดวันจริงอัตโนมัติ (now)' : 'โหมดวันอ้างอิงคงที่';
+            autoEl.className = 'badge ' + (state.autoRealtime ? 'b-active' : 'b-quarantine');
+          }
           $('#btn-sync-today').textContent = state.serverToday
             ? 'อัปเดตเป็นวันนี้ (' + fmtThaiDate(state.serverToday) + ')'
             : 'อัปเดตเป็นวันปัจจุบัน';
@@ -1907,60 +2246,159 @@
           if (!normalized) return;
           $('#rx-code').value = normalized;
           ssSet(KEY_RX, normalized);
-          if ($('#admin-code').value.trim()) {
-            ssSet(KEY_ADMIN, $('#admin-code').value);
-          }
           updateLock();
           renderUsers();
-          if (!$('#admin-code').value.trim()) {
+          if (!state.authVerified) {
+            updateCredStatus('เลือกผู้ปฏิบัติงาน ' + normalized + ' แล้ว · กรอกกุญแจผู้ดูแลแล้วกด "ตรวจสอบและปลดล็อก"', false);
             $('#admin-code').focus();
+          } else {
+            showToast('เปลี่ยนรหัสผู้บันทึกในเซสชันเป็น ' + normalized + ' แล้ว');
           }
         }
 
         function renderUsers() {
           renderUsersSummaryOnly();
-          const operators = buildOperatorDirectory();
-          const curBy = creds().by;
-          $('#n-users').textContent = '(' + operators.length + ')';
-          $('#users-count').textContent = 'พบผู้ปฏิบัติงาน ' + operators.length + ' รหัสในประวัติการจ่าย';
+          const directory = buildStaffDirectory();
+          const curBy = str(creds().by || $('#rx-code').value).trim().toUpperCase();
+          $('#n-users').textContent = '(' + directory.length + ')';
+          $('#staff-setup-note').hidden = !state.loadedOnce || state.staffUsersReady;
+          $('#users-count').textContent = state.staffUsersReady
+            ? 'ทะเบียนผู้ปฏิบัติงาน ' + directory.length + ' คน (ใช้งาน ' + directory.filter((u) => u.is_active).length + ' คน)'
+            : 'สรุปจากประวัติการจ่าย ' + directory.length + ' รหัส';
 
           const body = $('#users-body');
-          if (!operators.length) {
-            body.replaceChildren(emptyRow(7, 'ยังไม่มีประวัติรหัสเภสัชกรในระบบ'));
+          if (!directory.length) {
+            body.replaceChildren(emptyRow(7, 'ยังไม่มีข้อมูลผู้ปฏิบัติงานในระบบ'));
             return;
           }
 
           body.replaceChildren(
-            ...operators.map((op) => {
-              const isSelected = curBy === op.code;
-              const codeCell = el('td', { class: 'code' }, op.code);
+            ...directory.map((u) => {
+              const isSelected = curBy === u.user_code;
+              const codeCell = el('td', { class: 'code' }, u.user_code);
               if (isSelected) {
                 codeCell.append(el('span', { class: 'small', text: 'กำลังใช้งานในเซสชันนี้' }));
               }
-              const lastTd = td(op.lastDt ? fmtThaiDateTime(op.lastDt) : '-', 'nowrap tabular');
-              if (op.lastDt) lastTd.setAttribute('title', op.lastDt.replace('T', ' '));
-              return el(
-                'tr',
+              const nameCell = el('td', null, u.full_name);
+              if (u.license_no) {
+                nameCell.append(el('span', { class: 'small mono', text: 'ใบอนุญาต ' + u.license_no }));
+              }
+              const roleCell = el('td', null, badge(ROLE_LABEL[u.role] || u.role, 'b-written_off'));
+              const statsCell = el(
+                'td',
+                { class: 'nowrap tabular' },
+                'จ่าย ' + fmtInt(u.dispense) + ' · คืน ' + fmtInt(u.return) + ' · ยกเลิก ' + fmtInt(u.void),
+                el('span', { class: 'small', text: 'ยอดจ่ายรวม ' + fmtInt(u.totalQty) + ' หน่วย' })
+              );
+              const lastTd = td(u.lastDt ? fmtThaiDateTime(u.lastDt) : 'ยังไม่เคยทำรายการ', 'nowrap tabular');
+              if (u.lastDt) lastTd.setAttribute('title', u.lastDt.replace('T', ' '));
+
+              const statusCell = el(
+                'td',
                 null,
-                codeCell,
-                td(fmtInt(op.dispense), 'num'),
-                td(fmtInt(op.return), 'num'),
-                td(fmtInt(op.void), 'num'),
-                td(fmtInt(op.totalQty), 'num'),
-                lastTd,
-                el(
-                  'td',
-                  { class: 'actions' },
+                u.fromTable
+                  ? badge(u.is_active ? 'ใช้งาน' : 'ปิดใช้งาน', u.is_active ? 'b-on' : 'b-off')
+                  : badge('จากประวัติจ่าย', 'b-quarantine')
+              );
+
+              const actionsCell = el('td', { class: 'actions' });
+              if (u.is_active) {
+                actionsCell.append(
                   el('button', {
                     type: 'button',
                     class: 'btn sm ' + (isSelected ? 'primary' : 'secondary'),
-                    onclick: () => selectOperatorCode(op.code),
-                    text: isSelected ? 'กำลังใช้งาน' : 'ใช้รหัสนี้เป็นผู้บันทึก'
+                    onclick: () => selectOperatorCode(u.user_code),
+                    text: isSelected ? 'กำลังใช้งาน' : 'ใช้รหัสนี้'
                   })
-                )
-              );
+                );
+              }
+              if (u.fromTable) {
+                actionsCell.append(
+                  actBtn('แก้ไข', 'secondary', () => openEditStaff(u)),
+                  u.is_active
+                    ? actBtn('ปิดใช้งาน', 'danger', () => openToggleStaffActive(u, false))
+                    : actBtn('เปิดใช้งาน', 'secondary', () => openToggleStaffActive(u, true))
+                );
+              }
+
+              return el('tr', null, codeCell, nameCell, roleCell, statsCell, lastTd, statusCell, actionsCell);
             })
           );
+        }
+
+        function formatLogDiff(row) {
+          const oldStr = row.old_value === null || row.old_value === undefined ? '' : JSON.stringify(row.old_value);
+          const newStr = row.new_value === null || row.new_value === undefined ? '' : JSON.stringify(row.new_value);
+          const trimVal = (s) => (s.length > 48 ? s.slice(0, 45) + '…' : s);
+          if (oldStr && newStr) return trimVal(oldStr) + ' -> ' + trimVal(newStr);
+          if (newStr) return '+ ' + trimVal(newStr);
+          if (oldStr) return '- ' + trimVal(oldStr);
+          return '-';
+        }
+
+        function renderChangeLog() {
+          const q = $('#chg-q') ? $('#chg-q').value.trim().toLowerCase() : '';
+          const rows = state.changeLog.filter((r) => {
+            if (!q) return true;
+            return (
+              str(r.file).toLowerCase().includes(q) ||
+              str(r.record_id).toLowerCase().includes(q) ||
+              str(r.field).toLowerCase().includes(q) ||
+              str(r.reason).toLowerCase().includes(q) ||
+              str(r.changed_by).toLowerCase().includes(q)
+            );
+          });
+          const shown = rows.slice(0, state.chgShown);
+          $('#chg-body').replaceChildren(
+            ...(shown.length
+              ? shown.map((r) =>
+                  el(
+                    'tr',
+                    null,
+                    td('#' + str(r.log_id), 'code tabular'),
+                    td(r.changed_on ? fmtThaiDate(r.changed_on) : '-', 'nowrap tabular'),
+                    td(r.changed_by || '-', 'nowrap'),
+                    el(
+                      'td',
+                      { class: 'nowrap' },
+                      el('span', { class: 'mono', translate: 'no', text: str(r.file) }),
+                      el('span', { class: 'small mono', text: str(r.record_id) })
+                    ),
+                    el(
+                      'td',
+                      null,
+                      el('span', { class: 'mono', translate: 'no', text: str(r.field) }),
+                      el('span', { class: 'small mono', text: formatLogDiff(r) })
+                    ),
+                    el(
+                      'td',
+                      null,
+                      el('span', { text: str(r.reason) }),
+                      el('span', { class: 'small', text: 'สถานะ: ' + str(r.status || '-') })
+                    )
+                  )
+                )
+              : [emptyRow(6, 'ไม่พบประวัติการแก้ไขระบบในเงื่อนไขที่ค้นหา')])
+          );
+          $('#chg-count').textContent =
+            'แสดง ' + shown.length + ' จาก ' + rows.length + ' รายการ' + (rows.length !== state.changeLog.length ? ' (ทั้งหมด ' + state.changeLog.length + ')' : '');
+          const more = $('#chg-more');
+          const left = rows.length - shown.length;
+          more.hidden = left <= 0;
+          more.textContent = 'แสดงประวัติเพิ่ม (' + Math.min(CHG_PAGE, left) + ' จากที่เหลือ ' + left + ')';
+        }
+
+        if ($('#chg-q')) {
+          $('#chg-q').addEventListener('input', () => {
+            state.chgShown = CHG_PAGE;
+            renderChangeLog();
+          });
+        }
+        if ($('#chg-more')) {
+          $('#chg-more').addEventListener('click', () => {
+            state.chgShown += CHG_PAGE;
+            renderChangeLog();
+          });
         }
 
         $('#jumpQuarantineBtn').addEventListener('click', () => {
@@ -2126,7 +2564,7 @@
 
         function openDialog(cfg) {
           if (!canWrite()) {
-            updateLock();
+            promptUnlock();
             return;
           }
           dlgCfg = cfg;
@@ -2177,21 +2615,20 @@
           const cfg = dlgCfg;
           dlgError('');
 
+          let useAdmin = creds().admin;
+          const by = creds().by;
+          let reauthVal = '';
           if (!$('#dlg-reauth').hidden) {
-            const v = $('#dlg-reauth-input').value;
-            if (!v.trim()) {
-              dlgError('กรุณากรอกรหัสผู้ดูแลใหม่');
+            reauthVal = $('#dlg-reauth-input').value;
+            if (!reauthVal.trim()) {
+              dlgError('กรุณากรอกกุญแจผู้ดูแลใหม่');
               $('#dlg-reauth-input').focus();
               return;
             }
-            ssSet(KEY_ADMIN, v);
-            $('#admin-code').value = v;
-            $('#dlg-reauth').hidden = true;
-            updateLock();
+            useAdmin = reauthVal;
           }
 
-          const c = creds();
-          if (!c.admin || !c.by) {
+          if (!useAdmin || !by) {
             dlgError(LOCK_MSG);
             return;
           }
@@ -2206,13 +2643,20 @@
 
           const body = cfg.body(vals);
           if (cfg.reason) body.reason = vals.reason.trim();
-          body.by = c.by;
+          body.by = by;
 
           setBusy(true);
-          const r = await postAdmin(body, c.admin);
+          const r = await postAdmin(body, useAdmin);
           setBusy(false);
 
           if (r.ok) {
+            if (reauthVal) {
+              ssSet(KEY_ADMIN, useAdmin);
+              $('#admin-code').value = useAdmin;
+              state.authVerified = true;
+              $('#dlg-reauth').hidden = true;
+              updateLock();
+            }
             const msg = cfg.success(r.data, vals);
             closeDialog();
             showToast(msg);
@@ -2224,11 +2668,12 @@
           }
 
           if (r.status === 401) {
+            state.authVerified = false;
             ssDel(KEY_ADMIN);
             $('#admin-code').value = '';
             updateLock();
             $('#dlg-reauth').hidden = false;
-            dlgError(r.message + ' · ล้างรหัสผู้ดูแลที่บันทึกไว้แล้ว กรุณากรอกรหัสผู้ดูแลใหม่ด้านล่าง');
+            dlgError(r.message + ' · กรุณากรอกกุญแจผู้ดูแลที่ถูกต้องด้านล่าง');
             $('#dlg-reauth-input').focus();
             return;
           }
@@ -2676,6 +3121,144 @@
         $('#btn-sync-today').addEventListener('click', () => openSetAsOf(state.serverToday));
         $('#btn-set-asof').addEventListener('click', () => openSetAsOf(state.serverToday || state.asOf));
 
+        // =========================================================
+        // คำสั่งฝั่งผู้ปฏิบัติงาน: staff_create, staff_update, staff_set_active
+        // =========================================================
+        function staffFields(u) {
+          return [
+            {
+              name: 'full_name',
+              label: 'ชื่อ-สกุล',
+              required: true,
+              value: u ? u.full_name : '',
+              placeholder: 'เช่น ภญ.สุภาวดี ใจดี'
+            },
+            {
+              name: 'role',
+              label: 'บทบาท',
+              type: 'select',
+              required: true,
+              value: u ? u.role : 'pharmacist',
+              options: [
+                { value: 'pharmacist', label: 'เภสัชกร' },
+                { value: 'assistant', label: 'ผู้ช่วยเภสัชกร' },
+                { value: 'admin', label: 'ผู้ดูแลระบบ' }
+              ]
+            },
+            {
+              name: 'license_no',
+              label: 'เลขใบอนุญาตประกอบวิชาชีพ (ถ้ามี)',
+              value: u ? u.license_no : '',
+              placeholder: 'เช่น ภ.30004',
+              full: true
+            }
+          ];
+        }
+
+        function staffChanges(u, v) {
+          const changes = {};
+          const fn = str(v.full_name).trim();
+          const rl = str(v.role).trim();
+          const lc = str(v.license_no).trim();
+          if (fn !== str(u.full_name).trim()) changes.full_name = fn;
+          if (rl !== str(u.role).trim()) changes.role = rl;
+          if (lc !== str(u.license_no).trim()) changes.license_no = lc;
+          return changes;
+        }
+
+        $('#btn-add-staff').addEventListener('click', () => {
+          if (!state.staffUsersReady) {
+            showToast('กรุณารัน sql/08_combined_apply_supabase.sql (หรือ 07_staff_users.sql) ใน Supabase ก่อนเพิ่มผู้ปฏิบัติงาน');
+            return;
+          }
+          openDialog({
+            title: 'เพิ่มผู้ปฏิบัติงานใหม่',
+            fields: [
+              {
+                name: 'user_code',
+                label: 'รหัสผู้ปฏิบัติงาน',
+                required: true,
+                upper: true,
+                placeholder: 'เช่น RX-04, PH-01 หรือ ADM-02',
+                hint: 'รูปแบบ A-Z 2-6 ตัว ขีด - และตัวเลข 2-4 หลัก'
+              },
+              ...staffFields(null)
+            ],
+            summary: (v) => {
+              const code = str(v.user_code).trim().toUpperCase();
+              return code
+                ? 'เพิ่มผู้ปฏิบัติงาน ' + code + (str(v.full_name).trim() ? ' · ' + str(v.full_name).trim() : '')
+                : 'เพิ่มผู้ปฏิบัติงานใหม่ลงทะเบียน staff_users';
+            },
+            validate: (v) => {
+              const errs = [];
+              const code = str(v.user_code).trim().toUpperCase();
+              if (!/^[A-Z]{2,6}-\d{2,4}$/.test(code)) {
+                errs.push('รหัสผู้ปฏิบัติงานต้องอยู่ในรูปแบบ เช่น RX-04 หรือ ADM-02');
+              }
+              if (!str(v.full_name).trim()) errs.push('กรุณาระบุชื่อ-สกุล');
+              if (!['pharmacist', 'assistant', 'admin'].includes(v.role)) errs.push('กรุณาเลือกบทบาท');
+              return errs;
+            },
+            body: (v) => ({
+              action: 'staff_create',
+              user: {
+                user_code: str(v.user_code).trim().toUpperCase(),
+                full_name: str(v.full_name).trim(),
+                role: v.role,
+                license_no: str(v.license_no).trim()
+              }
+            }),
+            success: (r, v) =>
+              'เพิ่มผู้ปฏิบัติงาน ' + (r.user?.user_code || str(v.user_code).trim().toUpperCase()) + ' แล้ว'
+          });
+        });
+
+        function openEditStaff(u) {
+          openDialog({
+            title: 'แก้ไขข้อมูลผู้ปฏิบัติงาน ' + str(u.user_code),
+            fields: staffFields(u),
+            reason: true,
+            summary: (v) => {
+              const ch = Object.keys(staffChanges(u, v)).map((k) => STAFF_FIELD_LABEL[k] || k);
+              return (
+                'แก้ไขผู้ปฏิบัติงาน ' +
+                str(u.user_code) +
+                ' · ' +
+                (ch.length ? 'ช่องที่เปลี่ยน: ' + ch.join(', ') : 'ยังไม่ได้เปลี่ยนช่องใด')
+              );
+            },
+            validate: (v) => {
+              const errs = [];
+              if (!str(v.full_name).trim()) errs.push('ชื่อ-สกุลห้ามว่าง');
+              if (!['pharmacist', 'assistant', 'admin'].includes(v.role)) errs.push('กรุณาเลือกบทบาท');
+              if (!errs.length && Object.keys(staffChanges(u, v)).length === 0) errs.push('ยังไม่ได้แก้ไขช่องใด');
+              return errs;
+            },
+            body: (v) => ({ action: 'staff_update', user_code: u.user_code, changes: staffChanges(u, v) }),
+            success: () => 'แก้ไขข้อมูลผู้ปฏิบัติงาน ' + str(u.user_code) + ' แล้ว'
+          });
+        }
+
+        function openToggleStaffActive(u, active) {
+          const verb = active ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+          openDialog({
+            title: verb + 'ผู้ปฏิบัติงาน ' + str(u.user_code),
+            danger: !active,
+            reason: true,
+            summary:
+              verb +
+              ' ' +
+              str(u.user_code) +
+              ' (' +
+              str(u.full_name) +
+              ')' +
+              (active ? '' : ' · ผู้ปฏิบัติงานที่ปิดใช้งานจะไม่ได้รับอนุญาตให้เลือกสวมสิทธิ์ใหม่'),
+            body: () => ({ action: 'staff_set_active', user_code: u.user_code, active: active === true }),
+            success: () => verb + 'ผู้ปฏิบัติงาน ' + str(u.user_code) + ' แล้ว'
+          });
+        }
+
         // ซิงก์อัปเดตทันทีเมื่อแท็บหน้าขายยาหรือแท็บอื่นแก้ไขข้อมูล
         if (syncChannel) {
           syncChannel.addEventListener('message', (ev) => {
@@ -2684,11 +3267,16 @@
         }
 
         // เริ่มทำงาน
-        $('#admin-code').value = ssGet(KEY_ADMIN);
-        $('#rx-code').value = ssGet(KEY_RX);
+        const savedAdmin = ssGet(KEY_ADMIN);
+        const savedRx = ssGet(KEY_RX);
+        $('#admin-code').value = savedAdmin;
+        $('#rx-code').value = savedRx;
         updateLock();
         if (typeof location !== 'undefined' && location.hash === '#date-sync') {
           selectTab('users');
+        }
+        if (savedAdmin.trim() && savedRx.trim()) {
+          verifyCredentials(savedAdmin, savedRx, { silent: true });
         }
         loadData();
       })();

@@ -913,10 +913,10 @@
                     </svg>
                   </span>
                   <div>
-                    <h3 class="module-title">จัดการระบบ (ผู้ดูแล)</h3>
+                    <h3 class="module-title">จัดการระบบ (ผู้ดูแลและผู้ปฏิบัติงาน)</h3>
                     <p class="module-desc">
-                      ศูนย์ควบคุม 9 คำสั่งผ่าน <code translate="no">/api/admin</code> ยืนยันตัวตนด้วย
-                      <span translate="no">ADMIN_CODE</span> บนเซิร์ฟเวอร์ พร้อมบันทึกประวัติ
+                      ศูนย์ควบคุม 12 คำสั่งผ่าน <code translate="no">/api/admin</code> ยืนยันสิทธิ์จริงด้วย
+                      <span translate="no">ADMIN_CODE</span> บนเซิร์ฟเวอร์ จัดการทะเบียนผู้ปฏิบัติงาน และดูประวัติ
                       <span translate="no">change_log</span> ทุกธุรกรรม
                     </p>
                   </div>
@@ -926,19 +926,19 @@
 
             <div class="admin-matrix">
               <div class="admin-group">
-                <strong>จัดการทะเบียนยา (3 คำสั่ง)</strong>
-                <span class="mono" translate="no">drug_create · drug_update · drug_set_active</span>
+                <strong>จัดการทะเบียนยา &amp; รับคืน/ตั้งวันที่ (6 คำสั่ง)</strong>
+                <span class="mono" translate="no">drug_create · update · set_active · return · void · config_set_as_of</span>
               </div>
               <div class="admin-group">
                 <strong>รับล็อต &amp; จัดการสถานะสต็อก (3 คำสั่ง)</strong>
                 <span class="mono" translate="no">stock_receive · stock_fix_expiry · stock_set_status</span>
               </div>
               <div class="admin-group">
-                <strong>รับคืน ยกเลิก &amp; ตั้งวันอ้างอิง (3 คำสั่ง)</strong>
-                <span class="mono" translate="no">dispense_return · dispense_void · config_set_as_of</span>
+                <strong>จัดการผู้ปฏิบัติงาน &amp; สิทธิ์ (3 คำสั่ง + Auth)</strong>
+                <span class="mono" translate="no">auth_verify · staff_create · staff_update · staff_set_active</span>
               </div>
               <div class="admin-group">
-                <strong>งานติดตามความปลอดภัยคลัง</strong>
+                <strong>งานติดตามความปลอดภัย &amp; Change Log</strong>
                 <span class="tabular" id="adminIncText">กำลังตรวจสอบล็อตกักกันและอุบัติการณ์…</span>
               </div>
             </div>

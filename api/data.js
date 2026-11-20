@@ -8,6 +8,8 @@ const TABLES = {
   dispense_log: 'dispense_log?select=*&order=dispense_id',
   catalog: 'v_drug_catalog?select=*&order=sku',
   incidents: 'incidents?select=*&order=incident_id',
+  staff_users: 'staff_users?select=*&order=user_code',
+  change_log: 'change_log?select=*&order=log_id.desc&limit=100',
 };
 
 module.exports = async (req, res) => {
@@ -24,28 +26,49 @@ module.exports = async (req, res) => {
       if (!r.ok) throw new Error(`Supabase ตอบ ${r.status} ที่ ${path.split('?')[0]}`);
       return r.json();
     };
-    // catalog และ incidents อ่านแยกแบบ non-fatal เพื่อให้หน้าหลักไม่พังตามหากยังไม่ได้สร้างตาราง/view
+    // catalog, incidents, staff_users และ change_log อ่านแยกแบบ non-fatal เพื่อให้หน้าหลักไม่พังตามหากยังไม่ได้ติดตั้งตารางเสริม
     const getCatalog = get(TABLES.catalog).then(
       items => ({ items }),
       () => ({ error: 'ยังไม่มี v_drug_catalog ให้รัน crud.sql ใน Supabase' }));
     const getIncidents = get(TABLES.incidents).then(
       items => ({ items }),
       () => ({ items: [] }));
-    const [cfg, drugs, stock, dispense, catalog, incidents] = await Promise.all([
-      get('app_config?select=as_of&id=eq.1'),
-      get(TABLES.drugs), get(TABLES.stock), get(TABLES.dispense_log), getCatalog, getIncidents,
+    const getStaffUsers = get(TABLES.staff_users).then(
+      items => ({ items, ready: true }),
+      () => ({ items: [], ready: false }));
+    const getChangeLog = get(TABLES.change_log).then(
+      items => ({ items }),
+      () => ({ items: [] }));
+    const [cfg, drugs, stock, dispense, catalog, incidents, staffUsers, changeLog] = await Promise.all([
+      get('app_config?select=*&id=eq.1'),
+      get(TABLES.drugs), get(TABLES.stock), get(TABLES.dispense_log),
+      getCatalog, getIncidents, getStaffUsers, getChangeLog,
     ]);
     // ตารางที่ไม่มีนโยบายอ่านจะคืน [] โดยไม่แจ้ง error จึงต้องตรวจเอง
     if (!cfg.length || !drugs.length || !stock.length) {
       return res.status(502).json({ error: 'ได้ข้อมูลว่าง ตรวจนโยบายสิทธิ์เข้าถึงแถว (RLS) ของตาราง' });
     }
     const serverToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
-    const meta = { as_of: cfg[0].as_of, server_today: serverToday, source: 'supabase' };
+    const configAsOf = String(cfg[0].as_of || '').slice(0, 10);
+    const autoRealtime = cfg[0].auto_realtime === true;
+    const effectiveAsOf = autoRealtime
+      ? (configAsOf && configAsOf > serverToday ? configAsOf : serverToday)
+      : configAsOf;
+    const meta = {
+      as_of: effectiveAsOf || serverToday,
+      config_as_of: configAsOf,
+      auto_realtime: autoRealtime,
+      server_today: serverToday,
+      source: 'supabase',
+    };
     const out = {
       drugs: { meta, items: drugs },
       stock: { meta, items: stock },
       dispense_log: { meta, items: dispense },
       incidents: { meta, items: incidents.items },
+      staff_users: { meta, items: staffUsers.items },
+      staff_users_ready: staffUsers.ready,
+      change_log: { meta, items: changeLog.items },
     };
     if (catalog.items) out.catalog = { meta, items: catalog.items };
     else out.catalog_error = catalog.error;

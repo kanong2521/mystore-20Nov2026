@@ -17,6 +17,11 @@ const ACTIONS = {
   dispense_return:  ['dispense_return',  ['dispense_id', 'qty', 'reason', 'by'], b => ({ p_dispense_id: b.dispense_id, p_qty: Number(b.qty), p_reason: b.reason, p_by: b.by })],
   dispense_void:    ['dispense_void',    ['dispense_id', 'reason', 'by'],      b => ({ p_dispense_id: b.dispense_id, p_reason: b.reason, p_by: b.by })],
   config_set_as_of: ['config_set_as_of', ['as_of', 'by'],                      b => ({ p_as_of: b.as_of, p_by: b.by })],
+  staff_create:     ['staff_create',     ['user', 'by'],                       b => ({ p: b.user, p_by: b.by })],
+  staff_update:     ['staff_update',     ['user_code', 'changes', 'reason', 'by'],
+                      b => ({ p_code: b.user_code, p: b.changes, p_reason: b.reason, p_by: b.by })],
+  staff_set_active: ['staff_set_active', ['user_code', 'active', 'reason', 'by'],
+                      b => ({ p_code: b.user_code, p_active: b.active === true, p_reason: b.reason, p_by: b.by })],
 };
 
 function sameCode(a, b) {
@@ -42,6 +47,16 @@ module.exports = async (req, res) => {
   let b = req.body;
   if (typeof b === 'string') { try { b = JSON.parse(b); } catch { b = {}; } }
   b = b || {};
+  if (b.action === 'auth_verify') {
+    const by = String(b.by ?? '').trim().toUpperCase();
+    if (!by) {
+      return res.status(400).json({ ok: false, message: 'ต้องระบุรหัสผู้ปฏิบัติงาน (เช่น RX-01)' });
+    }
+    if (!/^[A-Z0-9_-]{2,20}$/.test(by)) {
+      return res.status(400).json({ ok: false, message: 'รหัสผู้ปฏิบัติงานต้องใช้ตัวอักษร A-Z ตัวเลข 0-9 หรือ -/_ ยาว 2-20 ตัว' });
+    }
+    return res.status(200).json({ ok: true, verified: true, by });
+  }
   const spec = ACTIONS[b.action];
   if (!spec) return res.status(400).json({ ok: false, message: 'ไม่รู้จักงาน ' + String(b.action || '') });
   const [fn, required, toParams] = spec;
@@ -68,7 +83,7 @@ module.exports = async (req, res) => {
     if (data && /^23/.test(data.code || '')) return res.status(400).json({ ok: false, message: 'ข้อมูลขัดกฎของฐานข้อมูล ตรวจค่าที่กรอก' });
     // 22xxx = ค่าผิดชนิดหรือเกินช่วง เช่น 2027-02-30 หรือจำนวนที่ไม่ใช่ตัวเลข
     if (data && /^22/.test(data.code || '')) return res.status(400).json({ ok: false, message: 'ค่าที่กรอกผิดรูปแบบหรือเกินช่วง (วันที่ไม่มีจริง หรือจำนวนไม่ใช่ตัวเลข)' });
-    return res.status(502).json({ ok: false, message: 'ฐานข้อมูลตอบผิดปกติ ตรวจ key และชื่อฟังก์ชัน (รัน crud.sql แล้วหรือยัง)' });
+    return res.status(502).json({ ok: false, message: 'ฐานข้อมูลตอบผิดปกติ ตรวจ key และชื่อฟังก์ชัน (รัน crud.sql / 07_staff_users.sql แล้วหรือยัง)' });
   } catch (e) {
     return res.status(502).json({ ok: false, message: 'เชื่อมฐานข้อมูลไม่ได้' });
   }

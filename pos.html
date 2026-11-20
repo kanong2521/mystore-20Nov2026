@@ -581,6 +581,39 @@
       .qty-btn:hover { background: var(--sb-green-light); }
       .qty-btn:active { transform: scale(0.95); }
 
+      .staff-quick-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .staff-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 38px;
+        padding: 5px 12px;
+        border-radius: var(--sb-btn-radius);
+        border: 1px solid var(--sb-border);
+        background: var(--sb-neutral-cool);
+        color: var(--sb-house);
+        font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
+      }
+      .staff-chip:hover {
+        background: var(--sb-green-light);
+        border-color: var(--sb-accent);
+      }
+      .staff-chip.active {
+        background: var(--sb-house);
+        border-color: var(--sb-house);
+        color: var(--sb-white);
+      }
+      .staff-chip:active { transform: scale(0.96); }
+
       .code-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -954,16 +987,19 @@
                 <div class="field-hint">ข้อมูลจำลอง ห้ามใส่ชื่อผู้ป่วยจริง</div>
               </div>
               <div class="field-group">
-                <label class="field-label" for="pharmacistInput">รหัสเภสัชกร</label>
+                <label class="field-label" for="pharmacistInput">รหัสเภสัชกร / ผู้ปฏิบัติงาน</label>
                 <input
                   type="text"
                   class="control"
                   id="pharmacistInput"
+                  list="pharmacistDatalist"
                   placeholder="เช่น RX-01"
                   autocomplete="off"
                   required
                 />
-                <div class="field-hint">คงรหัสเภสัชกรไว้ให้หลังจ่ายสำเร็จ</div>
+                <datalist id="pharmacistDatalist"></datalist>
+                <div class="staff-quick-list" id="pharmacistQuickList" aria-label="เลือกผู้ปฏิบัติงานด่วน"></div>
+                <div class="field-hint">คงรหัสเภสัชกรไว้ในเซสชันนี้ (ซิงก์ข้ามแท็บกับหน้าผู้ดูแลได้)</div>
               </div>
             </div>
 
@@ -1081,10 +1117,28 @@
       (() => {
         'use strict';
 
-        // ตัวช่วยดึง Element จาก id โดยปลอดภัย (ห้ามใช้ innerHTML กับข้อมูลภายนอกเด็ดขาด)
+        // ตัวช่วยดึง Element จาก id โดยปลอดภัย (ห้ามใช้เนื้อหาภายนอกใน DOM แบบไม่กรอง)
         const $ = (id) => document.getElementById(id);
+        const KEY_RX = 'rx_pharmacist_code';
 
-        // สถานะกลางของหน้าขายยา ไม่ใช้ Date หรือตัวแปรเวลาของเครื่องเบราว์เซอร์
+        function readSessionRx() {
+          try {
+            return String(sessionStorage.getItem(KEY_RX) || '').trim().toUpperCase();
+          } catch {
+            return '';
+          }
+        }
+        function saveSessionRx(code) {
+          try {
+            const c = String(code || '').trim().toUpperCase();
+            if (c) sessionStorage.setItem(KEY_RX, c);
+            else sessionStorage.removeItem(KEY_RX);
+          } catch {
+            /* ignore */
+          }
+        }
+
+        // สถานะกลางของหน้าขายยา ไม่ใช้คำสั่งเวลาของเครื่องเบราว์เซอร์
         const state = {
           asOf: '',
           serverToday: '',
@@ -1093,6 +1147,7 @@
           sellableDrugs: [],
           selectedSku: '',
           dispenseLogs: [],
+          staffOptions: [],
           drugLookup: new Map(),
           syncSeq: 0
         };
@@ -1227,12 +1282,73 @@
           state.sellableDrugs = sellableDrugs;
           state.dispenseLogs = Array.isArray(raw.dispense_log?.items) ? raw.dispense_log.items.slice() : [];
 
+          // รวบรวมรายชื่อผู้ปฏิบัติงานที่เปิดใช้งาน (หากมี staff_users ใช้จากตาราง มิฉะนั้นดึงจาก dispense_log)
+          const staffList = [];
+          if (raw.staff_users_ready !== false && Array.isArray(raw.staff_users?.items) && raw.staff_users.items.length) {
+            for (const u of raw.staff_users.items) {
+              if (!u || !u.user_code || u.is_active === false) continue;
+              staffList.push({
+                code: String(u.user_code).trim().toUpperCase(),
+                name: String(u.full_name || ''),
+                role: String(u.role || 'pharmacist')
+              });
+            }
+          } else {
+            const seenStaff = new Set();
+            for (const row of state.dispenseLogs) {
+              const code = String(row?.pharmacist_code || '').trim().toUpperCase();
+              if (!code || seenStaff.has(code)) continue;
+              seenStaff.add(code);
+              staffList.push({ code, name: '', role: 'pharmacist' });
+            }
+          }
+          staffList.sort((a, b) => a.code.localeCompare(b.code, 'en', { numeric: true }));
+          state.staffOptions = staffList;
+
           if (!sellableDrugs.some((d) => d.sku === state.selectedSku)) {
             state.selectedSku = sellableDrugs[0]?.sku || '';
           }
         }
 
-        // สร้างรายการปุ่มเลือกด่วนและ <select> โดยไม่ใช้ innerHTML
+        function renderPharmacistOptions() {
+          const dl = $('pharmacistDatalist');
+          const quick = $('pharmacistQuickList');
+          const curRx = String($('pharmacistInput').value || '').trim().toUpperCase();
+
+          if (dl) {
+            dl.replaceChildren(
+              ...state.staffOptions.map((u) => {
+                const opt = document.createElement('option');
+                opt.value = u.code;
+                if (u.name) opt.label = u.name;
+                return opt;
+              })
+            );
+          }
+          if (quick) {
+            quick.replaceChildren(
+              ...state.staffOptions.slice(0, 8).map((u) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'staff-chip' + (curRx === u.code ? ' active' : '');
+                btn.dataset.pickRx = u.code;
+                const codeSpan = document.createElement('span');
+                codeSpan.className = 'mono';
+                codeSpan.setAttribute('translate', 'no');
+                codeSpan.textContent = u.code;
+                btn.appendChild(codeSpan);
+                if (u.name && !u.name.startsWith('ผู้ปฏิบัติงาน ')) {
+                  const nameSpan = document.createElement('span');
+                  nameSpan.textContent = u.name;
+                  btn.appendChild(nameSpan);
+                }
+                return btn;
+              })
+            );
+          }
+        }
+
+        // สร้างรายการปุ่มเลือกด่วนและ <select> ด้วย DOM Node โดยไม่แทรกสตริง HTML ดิบ
         function renderDrugSelector() {
           const query = String($('drugSearchInput').value || '').trim().toLowerCase();
           const select = $('skuSelect');
@@ -1580,7 +1696,7 @@
               processInventoryData(fallbackRaw);
 
               $('fallbackReason').textContent =
-                `สาเหตุ: ${apiErr?.name === 'AbortError' ? 'หมดเวลาเชื่อมต่อเกิน 8 วินาที' : apiErr?.message || 'เชื่อมต่อ /api/data ไม่สำเร็จ'} — ปิดปุ่มขายชั่วคราวจนกว่าเซิร์ฟเวอร์จะกลับมาปกติ`;
+                `สาเหตุ: ${apiErr?.name === 'AbortError' ? 'หมดเวลาเชื่อมต่อเกิน 8 วินาที' : apiErr?.message || 'เชื่อมต่อ /api/data ไม่สำเร็จ'} · ปิดปุ่มขายชั่วคราวจนกว่าเซิร์ฟเวอร์จะกลับมาปกติ`;
               fallbackBanner.classList.add('show');
               connBadge.textContent = 'ข้อมูลสำรอง (ปิดการขายชั่วคราว)';
               connBadge.className = 'conn-pill fallback';
@@ -1614,6 +1730,7 @@
 
           renderDrugSelector();
           renderRecentDispenses();
+          renderPharmacistOptions();
           updateSubmitButtonState();
         }
 
@@ -1648,6 +1765,9 @@
           }
 
           const qty = Number(qtyRaw);
+          saveSessionRx(pharmacistCode);
+          $('pharmacistInput').value = pharmacistCode;
+          renderPharmacistOptions();
           state.submitting = true;
           updateSubmitButtonState();
 
@@ -1740,11 +1860,32 @@
         $('reloadDataBtn').addEventListener('click', () => loadInventory());
         $('retryApiBtn').addEventListener('click', () => loadInventory());
 
+        $('pharmacistInput').addEventListener('input', () => {
+          const norm = String($('pharmacistInput').value || '').trim().toUpperCase();
+          if (norm) saveSessionRx(norm);
+          renderPharmacistOptions();
+        });
+        $('pharmacistQuickList').addEventListener('click', (ev) => {
+          const btn = ev.target.closest('[data-pick-rx]');
+          if (!btn) return;
+          const code = String(btn.dataset.pickRx || '').trim().toUpperCase();
+          $('pharmacistInput').value = code;
+          saveSessionRx(code);
+          renderPharmacistOptions();
+          showFormError('');
+        });
+
         // รับสัญญาณอัปเดตหากหน้าผู้ดูแล (admin.html) มีการรับล็อตหรือปรับยอดจากแท็บอื่น
         if (syncChannel) {
           syncChannel.addEventListener('message', (ev) => {
             if (ev?.data?.type === 'refresh') loadInventory();
           });
+        }
+
+        // เติมรหัสผู้ปฏิบัติงานจาก sessionStorage (ไม่แตะต้องรหัสผู้ดูแล ADMIN_CODE ในหน้านี้)
+        const savedRx = readSessionRx();
+        if (savedRx && !$('pharmacistInput').value.trim()) {
+          $('pharmacistInput').value = savedRx;
         }
 
         // เริ่มต้นโหลดรายการยาและประวัติทันทีเมื่อเปิดหน้า
