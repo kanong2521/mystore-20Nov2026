@@ -922,20 +922,20 @@
 
             <div class="admin-matrix">
               <div class="admin-group">
-                <strong>จัดการทะเบียนยา</strong>
-                <span class="mono" translate="no">drug_create · drug_update · drug_toggle_active</span>
+                <strong>จัดการทะเบียนยา (3 คำสั่ง)</strong>
+                <span class="mono" translate="no">drug_create · drug_update · drug_set_active</span>
               </div>
               <div class="admin-group">
-                <strong>รับล็อต &amp; ปรับสต็อก</strong>
-                <span class="mono" translate="no">stock_receive · stock_adjust</span>
+                <strong>รับล็อต &amp; จัดการสถานะสต็อก (3 คำสั่ง)</strong>
+                <span class="mono" translate="no">stock_receive · stock_fix_expiry · stock_set_status</span>
               </div>
               <div class="admin-group">
-                <strong>สถานะล็อต &amp; ยกเลิกรายการจ่าย</strong>
-                <span class="mono" translate="no">stock_set_status · dispense_void</span>
+                <strong>รับคืน &amp; ยกเลิกรายการจ่าย (2 คำสั่ง)</strong>
+                <span class="mono" translate="no">dispense_return · dispense_void</span>
               </div>
               <div class="admin-group">
-                <strong>ติดตามและปิดอุบัติการณ์</strong>
-                <span class="mono tabular" id="adminIncText" translate="no">incident_update</span>
+                <strong>งานติดตามความปลอดภัยคลัง</strong>
+                <span class="tabular" id="adminIncText">กำลังตรวจสอบล็อตกักกันและอุบัติการณ์…</span>
               </div>
             </div>
 
@@ -1154,11 +1154,8 @@
             ? `${s.nearestLot.sku} · ${s.nearestLot.expiry}`
             : 'ไม่มีล็อตคงเหลือ';
 
-          // Admin Card Incident Readout
-          $('adminIncText').textContent =
-            s.openIncidents > 0
-              ? `incident_update · เปิดอยู่ ${s.openIncidents} รายการ`
-              : 'incident_update · ไม่มีงานค้าง';
+          // Admin Card Safety & Incident Readout
+          $('adminIncText').textContent = `ล็อตกักกัน ${s.quarantineLots} ล็อต · อุบัติการณ์เปิดอยู่ ${s.openIncidents} รายการ`;
 
           // Probe badges for /api/data & v_drug_catalog
           const timingSuffix = Number.isFinite(dataElapsedMs) ? ` · ${Math.round(dataElapsedMs)} ms` : '';
