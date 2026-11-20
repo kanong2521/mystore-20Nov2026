@@ -1,0 +1,254 @@
+/* pill-bg.css : Remotion-style compositor-only floating pill theme layer
+ * Shared across index.html, dashboard.html, and drug_dashboard.html.
+ * Honors prefers-reduced-motion via opt-in and persists manual pause state.
+ */
+
+:root {
+  --pill-spring: linear(
+    0, 0.016 0.5%, 0.06 1%, 0.226 2%, 1.116 5.4%, 1.375 6.6%, 1.527 7.7%,
+    1.565 8.2%, 1.585 8.8%, 1.581 9.3%, 1.559 9.8%, 1.458 10.9%,
+    0.937 14.3%, 0.784 15.5%, 0.693 16.6%, 0.67 17.1%, 0.657 17.7%,
+    0.671 18.7%, 0.729 19.8%, 1.042 23.3%, 1.13 24.5%, 1.182 25.6%,
+    1.201 26.7%, 1.192 27.7%, 1.156 28.8%, 0.977 32.2%, 0.925 33.4%,
+    0.894 34.5%, 0.882 35.6%, 0.887 36.6%, 0.907 37.7%, 1.045 42.4%,
+    1.069 44.5%, 1.059 46.3%, 0.979 50.9%, 0.96 53.4%, 0.966 55.3%,
+    1.013 59.9%, 1.024 62.3%, 0.986 71.2%, 1.008 79.9%, 0.995 88.9%, 1
+  );
+  --pill-c1: #006241;
+  --pill-c2: #00754a;
+  --pill-c3: #cba258;
+  --pill-c4: #d4e9e2;
+  --pill-ambient-opacity: 0.13;
+  --pill-hero-opacity: 0.2;
+}
+
+@supports not (transition-timing-function: linear(0, 1)) {
+  :root {
+    --pill-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+}
+
+body[data-pill-theme='portal'] {
+  --pill-c1: #006241;
+  --pill-c2: #00754a;
+  --pill-c3: #cba258;
+  --pill-c4: #d4e9e2;
+  --pill-ambient-opacity: 0.14;
+  --pill-hero-opacity: 0.21;
+}
+
+body[data-pill-theme='inventory'] {
+  --pill-c1: #1e3932;
+  --pill-c2: #2b5148;
+  --pill-c3: #cba258;
+  --pill-c4: #9cc5b6;
+  --pill-ambient-opacity: 0.12;
+  --pill-hero-opacity: 0.19;
+}
+
+body[data-pill-theme='catalog'] {
+  --pill-c1: #006241;
+  --pill-c2: #2b5148;
+  --pill-c3: #cba258;
+  --pill-c4: #5b8779;
+  --pill-ambient-opacity: 0.13;
+  --pill-hero-opacity: 0.21;
+}
+
+/* Stacking context isolation: keep sticky header on top and floaters below chrome/cards */
+.mobile-drawer {
+  position: relative;
+  z-index: 35;
+}
+
+.hero-band {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.lock-bar,
+main,
+.site-footer {
+  position: relative;
+  z-index: 1;
+}
+
+.page-pill-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  contain: layout style paint;
+}
+
+.hero-pill-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  contain: layout style paint;
+}
+
+.pill-sprite {
+  position: absolute;
+  left: var(--px, 50%);
+  top: var(--py, 50%);
+  width: var(--pw, 88px);
+  opacity: var(--po, 0.13);
+  transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg));
+  will-change: transform;
+}
+
+.pill-sprite svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pill-sprite[data-anim='a'] {
+    animation: pillFloatA var(--pd, 28s) ease-in-out var(--pdelay, 0s) infinite;
+  }
+  .pill-sprite[data-anim='b'] {
+    animation: pillFloatB var(--pd, 32s) ease-in-out var(--pdelay, 0s) infinite;
+  }
+  .pill-sprite[data-anim='c'] {
+    animation: pillFloatC var(--pd, 36s) ease-in-out var(--pdelay, 0s) infinite;
+  }
+  .pill-sprite[data-anim='o'] {
+    animation: pillOrbit var(--pd, 40s) ease-in-out var(--pdelay, 0s) infinite;
+  }
+}
+
+html[data-pill-motion='paused'] .pill-sprite {
+  animation-play-state: paused !important;
+}
+
+@keyframes pillFloatA {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg)) scale(1);
+  }
+  25% {
+    transform: translate3d(14px, -20px, 0) rotate(calc(var(--pr, 0deg) + 8deg)) scale(1.03);
+  }
+  50% {
+    transform: translate3d(-10px, -32px, 0) rotate(calc(var(--pr, 0deg) - 6deg)) scale(0.98);
+  }
+  75% {
+    transform: translate3d(18px, -12px, 0) rotate(calc(var(--pr, 0deg) + 5deg)) scale(1.02);
+  }
+}
+
+@keyframes pillFloatB {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg)) scale(1);
+  }
+  30% {
+    transform: translate3d(-18px, 16px, 0) rotate(calc(var(--pr, 0deg) - 10deg)) scale(1.04);
+  }
+  60% {
+    transform: translate3d(12px, 26px, 0) rotate(calc(var(--pr, 0deg) + 7deg)) scale(0.97);
+  }
+  85% {
+    transform: translate3d(-8px, 10px, 0) rotate(calc(var(--pr, 0deg) - 4deg)) scale(1.01);
+  }
+}
+
+@keyframes pillFloatC {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg));
+  }
+  33% {
+    transform: translate3d(20px, 14px, 0) rotate(calc(var(--pr, 0deg) + 12deg));
+  }
+  66% {
+    transform: translate3d(-14px, -18px, 0) rotate(calc(var(--pr, 0deg) - 9deg));
+  }
+}
+
+@keyframes pillOrbit {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg)) scale(1);
+  }
+  25% {
+    transform: translate3d(16px, 18px, 0) rotate(calc(var(--pr, 0deg) + 9deg)) scale(1.03);
+  }
+  50% {
+    transform: translate3d(-14px, 24px, 0) rotate(calc(var(--pr, 0deg) - 5deg)) scale(0.98);
+  }
+  75% {
+    transform: translate3d(-18px, -10px, 0) rotate(calc(var(--pr, 0deg) - 12deg)) scale(1.02);
+  }
+}
+
+.pill-motion-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: 50px;
+  border: 1px solid rgba(212, 233, 226, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+  color: #d4e9e2;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.pill-motion-btn:hover {
+  background: rgba(212, 233, 226, 0.2);
+  border-color: #d4e9e2;
+  color: #ffffff;
+}
+
+.pill-motion-btn:focus-visible {
+  outline: 2px solid #d4e9e2;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pill-motion-btn {
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease,
+      transform 0.45s var(--pill-spring);
+  }
+  .pill-motion-btn:active {
+    transform: scale(0.95);
+  }
+}
+
+.pill-motion-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1ed760;
+  flex-shrink: 0;
+}
+
+html[data-pill-motion='paused'] .pill-motion-dot {
+  background: #cba258;
+}
+
+@media (max-width: 767px) {
+  .pill-desktop-only {
+    display: none;
+  }
+}

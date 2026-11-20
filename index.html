@@ -21,6 +21,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./datetime-ui.css" />
+    <link rel="stylesheet" href="./pill-bg.css" />
     <style>
       :root {
         --sb-font-sans: 'Inter', 'Noto Sans Thai', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -674,7 +675,7 @@
       }
     </style>
   </head>
-  <body>
+  <body data-pill-theme="portal">
     <a class="skip-link" href="#main">ข้ามไปยังเนื้อหาหลัก</a>
 
     <header class="global-nav">
@@ -1014,6 +1015,7 @@
 
     <script src="./sync-store.js"></script>
     <script src="./datetime-ui.js"></script>
+    <script src="./pill-bg.js" defer></script>
     <script>
       (function () {
         'use strict';

@@ -902,9 +902,89 @@
         html { scroll-behavior: auto; }
         *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
       }
+
+      /* พื้นหลังเม็ดยา Executive Emerald & Gold (Compositor-only, เคารพ reduced-motion) */
+      :root {
+        --pill-spring: linear(
+          0, 0.016 0.5%, 0.06 1%, 0.226 2%, 1.116 5.4%, 1.375 6.6%, 1.527 7.7%,
+          1.565 8.2%, 1.585 8.8%, 1.581 9.3%, 1.559 9.8%, 1.458 10.9%,
+          0.937 14.3%, 0.784 15.5%, 0.693 16.6%, 0.67 17.1%, 0.657 17.7%,
+          0.671 18.7%, 0.729 19.8%, 1.042 23.3%, 1.13 24.5%, 1.182 25.6%,
+          1.201 26.7%, 1.192 27.7%, 1.156 28.8%, 0.977 32.2%, 0.925 33.4%,
+          0.894 34.5%, 0.882 35.6%, 0.887 36.6%, 0.907 37.7%, 1.045 42.4%,
+          1.069 44.5%, 1.059 46.3%, 0.979 50.9%, 0.96 53.4%, 0.966 55.3%,
+          1.013 59.9%, 1.024 62.3%, 0.986 71.2%, 1.008 79.9%, 0.995 88.9%, 1
+        );
+      }
+      @supports not (transition-timing-function: linear(0, 1)) {
+        :root { --pill-spring: cubic-bezier(0.34, 1.4, 0.64, 1); }
+      }
+      .mobile-drawer { position: relative; z-index: 80; }
+      .hero-band { position: relative; overflow: hidden; z-index: 1; }
+      .hero-inner { position: relative; z-index: 1; }
+      .lock-bar, main, .site-footer { position: relative; z-index: 1; }
+      .page-pill-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; contain: layout style paint; }
+      .hero-pill-stage { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; contain: layout style paint; }
+      .pill-sprite {
+        position: absolute; left: var(--px, 50%); top: var(--py, 50%); width: var(--pw, 86px);
+        opacity: var(--po, 0.12); transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg)); will-change: transform;
+      }
+      .pill-sprite svg { display: block; width: 100%; height: auto; }
+      @media (prefers-reduced-motion: no-preference) {
+        .pill-sprite[data-anim='a'] { animation: pillFloatA var(--pd, 32s) ease-in-out var(--pdelay, 0s) infinite; }
+        .pill-sprite[data-anim='b'] { animation: pillFloatB var(--pd, 38s) ease-in-out var(--pdelay, 0s) infinite; }
+        .pill-sprite[data-anim='c'] { animation: pillFloatC var(--pd, 42s) ease-in-out var(--pdelay, 0s) infinite; }
+      }
+      html[data-pill-motion='paused'] .pill-sprite { animation-play-state: paused !important; }
+      @keyframes pillFloatA {
+        0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg)) scale(1); }
+        50% { transform: translate3d(-12px, -24px, 0) rotate(calc(var(--pr, 0deg) + 7deg)) scale(1.03); }
+      }
+      @keyframes pillFloatB {
+        0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg)) scale(1); }
+        50% { transform: translate3d(16px, 22px, 0) rotate(calc(var(--pr, 0deg) - 8deg)) scale(0.98); }
+      }
+      @keyframes pillFloatC {
+        0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg)); }
+        50% { transform: translate3d(-16px, 16px, 0) rotate(calc(var(--pr, 0deg) + 10deg)); }
+      }
+      .pill-motion-btn {
+        display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 14px;
+        border-radius: 50px; border: 1px solid rgba(212, 233, 226, 0.45); background: rgba(255, 255, 255, 0.08);
+        color: #d4e9e2; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+        transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+      }
+      .pill-motion-btn:hover { background: rgba(212, 233, 226, 0.2); border-color: #d4e9e2; color: #ffffff; }
+      .pill-motion-dot { width: 8px; height: 8px; border-radius: 50%; background: #1ed760; flex-shrink: 0; }
+      html[data-pill-motion='paused'] .pill-motion-dot { background: #cba258; }
+      @media (prefers-reduced-motion: no-preference) {
+        .pill-motion-btn { transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 0.45s var(--pill-spring); }
+        .pill-motion-btn:active { transform: scale(0.95); }
+      }
+      @media (max-width: 767px) { .pill-desktop-only { display: none; } }
     </style>
   </head>
   <body>
+    <div class="page-pill-bg" aria-hidden="true">
+      <span class="pill-sprite" data-anim="a" style="--px:2%;--py:20%;--pw:92px;--pr:-20deg;--po:0.12;--pd:32s;--pdelay:-6s">
+        <svg viewBox="0 0 120 56" width="120" height="56"><defs><clipPath id="adm_c1"><rect x="4" y="6" width="112" height="44" rx="22"/></clipPath></defs><g clip-path="url(#adm_c1)"><rect x="4" y="6" width="56" height="44" fill="#1e3932"/><rect x="60" y="6" width="56" height="44" fill="#faf6ee"/><line x1="60" y1="6" x2="60" y2="50" stroke="#1e3932" stroke-width="1.8" opacity="0.6"/></g><rect x="4" y="6" width="112" height="44" rx="22" fill="none" stroke="#1e3932" stroke-width="2"/></svg>
+      </span>
+      <span class="pill-sprite" data-anim="b" style="--px:92%;--py:24%;--pw:70px;--pr:22deg;--po:0.13;--pd:36s;--pdelay:-14s">
+        <svg viewBox="0 0 72 72" width="72" height="72"><circle cx="36" cy="36" r="29" fill="#cba258" stroke="#7a5a1e" stroke-width="2"/><circle cx="36" cy="36" r="22" fill="#faf6ee" opacity="0.45"/><line x1="18" y1="36" x2="54" y2="36" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.75"/></svg>
+      </span>
+      <span class="pill-sprite pill-desktop-only" data-anim="c" style="--px:2.5%;--py:56%;--pw:84px;--pr:16deg;--po:0.11;--pd:40s;--pdelay:-10s">
+        <svg viewBox="0 0 112 50" width="112" height="50"><rect x="4" y="6" width="104" height="38" rx="19" fill="#7fa699" stroke="#1e3932" stroke-width="2"/><line x1="56" y1="9" x2="56" y2="41" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity="0.7"/></svg>
+      </span>
+      <span class="pill-sprite pill-desktop-only" data-anim="a" style="--px:91.5%;--py:62%;--pw:88px;--pr:-24deg;--po:0.12;--pd:34s;--pdelay:-18s">
+        <svg viewBox="0 0 120 56" width="120" height="56"><defs><clipPath id="adm_c2"><rect x="4" y="6" width="112" height="44" rx="22"/></clipPath></defs><g clip-path="url(#adm_c2)"><rect x="4" y="6" width="56" height="44" fill="#006241"/><rect x="60" y="6" width="56" height="44" fill="#d4e9e2"/></g><rect x="4" y="6" width="112" height="44" rx="22" fill="none" stroke="#006241" stroke-width="2"/></svg>
+      </span>
+      <span class="pill-sprite" data-anim="b" style="--px:3.5%;--py:84%;--pw:64px;--pr:-14deg;--po:0.11;--pd:38s;--pdelay:-24s">
+        <svg viewBox="0 0 72 72" width="72" height="72"><circle cx="36" cy="36" r="29" fill="#1e3932" stroke="#006241" stroke-width="2"/><circle cx="36" cy="36" r="22" fill="#d4e9e2" opacity="0.4"/><line x1="18" y1="36" x2="54" y2="36" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.75"/></svg>
+      </span>
+      <span class="pill-sprite pill-desktop-only" data-anim="c" style="--px:89%;--py:86%;--pw:80px;--pr:18deg;--po:0.12;--pd:44s;--pdelay:-12s">
+        <svg viewBox="0 0 92 52" width="92" height="52"><ellipse cx="46" cy="26" rx="40" ry="19" fill="#cba258" stroke="#7a5a1e" stroke-width="2"/><path d="M24 18 C36 12, 54 12, 66 17" fill="none" stroke="#faf6ee" stroke-width="3" stroke-linecap="round" opacity="0.75"/></svg>
+      </span>
+    </div>
     <a class="skip-link" href="#main">ข้ามไปยังเนื้อหาจัดการระบบ</a>
 
     <header class="global-nav">
@@ -953,6 +1033,20 @@
     </div>
 
     <section class="hero-band">
+      <div class="hero-pill-stage" aria-hidden="true">
+        <span class="pill-sprite" data-anim="a" style="--px:4%;--py:62%;--pw:76px;--pr:-18deg;--po:0.16;--pd:30s;--pdelay:-4s">
+          <svg viewBox="0 0 120 56" width="120" height="56"><defs><clipPath id="adm_hc1"><rect x="4" y="6" width="112" height="44" rx="22"/></clipPath></defs><g clip-path="url(#adm_hc1)"><rect x="4" y="6" width="56" height="44" fill="#d4e9e2"/><rect x="60" y="6" width="56" height="44" fill="#cba258"/></g><rect x="4" y="6" width="112" height="44" rx="22" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2"/></svg>
+        </span>
+        <span class="pill-sprite pill-desktop-only" data-anim="b" style="--px:36%;--py:10%;--pw:62px;--pr:24deg;--po:0.18;--pd:36s;--pdelay:-12s">
+          <svg viewBox="0 0 72 72" width="72" height="72"><circle cx="36" cy="36" r="29" fill="#cba258" stroke="rgba(255,255,255,0.5)" stroke-width="2"/><circle cx="36" cy="36" r="22" fill="#faf6ee" opacity="0.45"/><line x1="18" y1="36" x2="54" y2="36" stroke="#1e3932" stroke-width="3" stroke-linecap="round" opacity="0.75"/></svg>
+        </span>
+        <span class="pill-sprite" data-anim="c" style="--px:90%;--py:8%;--pw:84px;--pr:-24deg;--po:0.17;--pd:34s;--pdelay:-18s">
+          <svg viewBox="0 0 112 50" width="112" height="50"><rect x="4" y="6" width="104" height="38" rx="19" fill="#9cc5b6" stroke="rgba(255,255,255,0.5)" stroke-width="2"/><line x1="56" y1="9" x2="56" y2="41" stroke="#1e3932" stroke-width="2.4" stroke-linecap="round" opacity="0.75"/></svg>
+        </span>
+        <span class="pill-sprite pill-desktop-only" data-anim="a" style="--px:46%;--py:74%;--pw:72px;--pr:14deg;--po:0.15;--pd:40s;--pdelay:-22s">
+          <svg viewBox="0 0 92 52" width="92" height="52"><ellipse cx="46" cy="26" rx="40" ry="19" fill="#d4e9e2" stroke="rgba(255,255,255,0.45)" stroke-width="2"/><path d="M24 18 C36 12, 54 12, 66 17" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.7"/></svg>
+        </span>
+      </div>
       <div class="hero-inner">
         <div>
           <h1 class="hero-title">จัดการระบบ (ผู้ดูแลและผู้ปฏิบัติงาน)</h1>
@@ -1393,6 +1487,10 @@
           <a href="./dashboard.html">Dashboard คลังยา</a>
           <a href="./drug_dashboard.html">ทะเบียนยา</a>
           <a href="./status.html">ตรวจสถานะ</a>
+          <button type="button" class="pill-motion-btn" id="pillMotionToggle">
+            <span class="pill-motion-dot" aria-hidden="true"></span>
+            <span id="pillMotionLabel">พักพื้นหลังเม็ดยา</span>
+          </button>
         </div>
       </div>
     </footer>
@@ -3586,6 +3684,26 @@
         if (savedAdmin.trim() && savedRx.trim()) {
           verifyCredentials(savedAdmin, savedRx, { silent: true });
         }
+
+        // ซิงก์ปุ่มพัก/เล่นพื้นหลังเม็ดยา (WCAG 2.2.2)
+        const MOTION_KEY = 'pharmacy_pill_motion';
+        const motionBtn = $('#pillMotionToggle');
+        const motionLbl = $('#pillMotionLabel');
+        let pillPaused = false;
+        try { pillPaused = localStorage.getItem(MOTION_KEY) === 'paused'; } catch { pillPaused = false; }
+        function syncPillMotion() {
+          document.documentElement.dataset.pillMotion = pillPaused ? 'paused' : 'running';
+          if (motionLbl) motionLbl.textContent = pillPaused ? 'เล่นพื้นหลังเม็ดยา' : 'พักพื้นหลังเม็ดยา';
+        }
+        syncPillMotion();
+        if (motionBtn) {
+          motionBtn.addEventListener('click', () => {
+            pillPaused = !pillPaused;
+            try { localStorage.setItem(MOTION_KEY, pillPaused ? 'paused' : 'running'); } catch { /* ignore */ }
+            syncPillMotion();
+          });
+        }
+
         loadData();
       })();
     </script>

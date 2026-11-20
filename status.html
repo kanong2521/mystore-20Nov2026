@@ -8,14 +8,25 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f7f9; --card: #ffffff; --text: #1d2330; --muted: #5b6475; --line: #dfe3ea;
+    --bg: #f2f0eb; --card: #ffffff; --text: #1d2330; --muted: #5b6475; --line: #dfe3ea;
     --ok: #16794c; --ok-bg: #e5f5ec; --bad: #b42318; --bad-bg: #fdecea;
-    --wait: #8a94a6; --wait-bg: #eef0f4; --warn: #9a5b00; --warn-bg: #fff4e0; --accent: #2f5bd3;
+    --wait: #8a94a6; --wait-bg: #eef0f4; --warn: #9a5b00; --warn-bg: #fff4e0; --accent: #00754a;
+    --pill-spring: linear(
+      0, 0.016 0.5%, 0.06 1%, 0.226 2%, 1.116 5.4%, 1.375 6.6%, 1.527 7.7%,
+      1.565 8.2%, 1.585 8.8%, 1.581 9.3%, 1.559 9.8%, 1.458 10.9%,
+      0.937 14.3%, 0.784 15.5%, 0.693 16.6%, 0.67 17.1%, 0.657 17.7%,
+      0.671 18.7%, 0.729 19.8%, 1.042 23.3%, 1.13 24.5%, 1.182 25.6%,
+      1.201 26.7%, 1.192 27.7%, 1.156 28.8%, 0.977 32.2%, 0.925 33.4%,
+      0.894 34.5%, 0.882 35.6%, 0.887 36.6%, 0.907 37.7%, 1.045 42.4%,
+      1.069 44.5%, 1.059 46.3%, 0.979 50.9%, 0.96 53.4%, 0.966 55.3%,
+      1.013 59.9%, 1.024 62.3%, 0.986 71.2%, 1.008 79.9%, 0.995 88.9%, 1
+    );
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text);
+  html { overflow-x: clip; }
+  body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; overflow-x: clip; background: var(--bg); color: var(--text);
          font: 16px/1.6 'Noto Sans Thai', system-ui, sans-serif; }
-  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  main { position: relative; z-index: 1; flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
   h1 { font-size: 24px; margin: 0 0 4px; }
   .sub { color: var(--muted); margin: 0 0 20px; }
   .banner { padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; display: none; }
@@ -48,7 +59,7 @@
   .check.bad .hint { display: block; }
   .summary { font-weight: 600; font-size: 18px; margin: 4px 0 0; }
   code { font-family: ui-monospace, Consolas, monospace; font-size: 14px; background: var(--wait-bg); padding: 1px 5px; border-radius: 4px; }
-  .top-nav { background: #1e3932; color: #fff; border-bottom: 2px solid #cba258; }
+  .top-nav { position: sticky; top: 0; z-index: 40; background: #1e3932; color: #fff; border-bottom: 2px solid #cba258; }
   .top-nav-inner { max-width: 1120px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .top-brand { color: #fff; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 15px; }
   .top-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
@@ -56,9 +67,60 @@
   .top-links a:hover { background: rgba(255,255,255,0.12); color: #fff; }
   .top-links a[aria-current="page"] { background: #d4e9e2; color: #1e3932; }
   .top-links a:focus-visible, .top-brand:focus-visible { outline: 2px solid #d4e9e2; outline-offset: 2px; }
+
+  .page-pill-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; contain: layout style paint; }
+  .pill-sprite { position: absolute; left: var(--px, 50%); top: var(--py, 50%); width: var(--pw, 84px); opacity: var(--po, 0.14); transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg)); will-change: transform; }
+  .pill-sprite svg { display: block; width: 100%; height: auto; }
+  @media (prefers-reduced-motion: no-preference) {
+    .pill-sprite[data-anim="a"] { animation: pillFloatA var(--pd, 28s) ease-in-out var(--pdelay, 0s) infinite; }
+    .pill-sprite[data-anim="b"] { animation: pillFloatB var(--pd, 32s) ease-in-out var(--pdelay, 0s) infinite; }
+    .pill-sprite[data-anim="c"] { animation: pillFloatC var(--pd, 36s) ease-in-out var(--pdelay, 0s) infinite; }
+  }
+  html[data-pill-motion="paused"] .pill-sprite { animation-play-state: paused !important; }
+  @keyframes pillFloatA {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg)) scale(1); }
+    50% { transform: translate3d(-10px, -28px, 0) rotate(calc(var(--pr, 0deg) + 8deg)) scale(1.03); }
+  }
+  @keyframes pillFloatB {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg)) scale(1); }
+    50% { transform: translate3d(14px, 24px, 0) rotate(calc(var(--pr, 0deg) - 9deg)) scale(0.98); }
+  }
+  @keyframes pillFloatC {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--pr, 0deg)); }
+    50% { transform: translate3d(16px, -16px, 0) rotate(calc(var(--pr, 0deg) + 10deg)); }
+  }
+  .site-footer { position: relative; z-index: 1; background: #1e3932; color: #fff; padding: 18px 16px 24px; border-top: 3px solid #cba258; }
+  .footer-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 14px; color: #d4e9e2; }
+  .pill-motion-btn {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 14px; border-radius: 50px;
+    border: 1px solid rgba(212, 233, 226, 0.45); background: rgba(255, 255, 255, 0.08); color: #d4e9e2;
+    font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  }
+  .pill-motion-btn:hover { background: rgba(212, 233, 226, 0.2); border-color: #d4e9e2; color: #ffffff; }
+  .pill-motion-dot { width: 8px; height: 8px; border-radius: 50%; background: #1ed760; flex-shrink: 0; }
+  html[data-pill-motion="paused"] .pill-motion-dot { background: #cba258; }
+  @media (max-width: 767px) { .pill-desktop-only { display: none; } }
 </style>
 </head>
 <body>
+<div class="page-pill-bg" aria-hidden="true">
+  <span class="pill-sprite" data-anim="a" style="--px:2%;--py:16%;--pw:90px;--pr:-22deg;--po:0.15;--pd:26s;--pdelay:-4s">
+    <svg viewBox="0 0 120 56" width="120" height="56"><defs><clipPath id="st_c1"><rect x="4" y="6" width="112" height="44" rx="22"/></clipPath></defs><g clip-path="url(#st_c1)"><rect x="4" y="6" width="56" height="44" fill="#00754a"/><rect x="60" y="6" width="56" height="44" fill="#faf6ee"/><line x1="60" y1="6" x2="60" y2="50" stroke="#00754a" stroke-width="1.8" opacity="0.6"/></g><rect x="4" y="6" width="112" height="44" rx="22" fill="none" stroke="#00754a" stroke-width="2"/></svg>
+  </span>
+  <span class="pill-sprite" data-anim="b" style="--px:89%;--py:22%;--pw:72px;--pr:24deg;--po:0.14;--pd:30s;--pdelay:-12s">
+    <svg viewBox="0 0 72 72" width="72" height="72"><circle cx="36" cy="36" r="29" fill="#cba258" stroke="#9a7228" stroke-width="2"/><circle cx="36" cy="36" r="22" fill="#faf6ee" opacity="0.45"/><line x1="18" y1="36" x2="54" y2="36" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.75"/></svg>
+  </span>
+  <span class="pill-sprite pill-desktop-only" data-anim="c" style="--px:4%;--py:56%;--pw:84px;--pr:14deg;--po:0.13;--pd:34s;--pdelay:-9s">
+    <svg viewBox="0 0 112 50" width="112" height="50"><rect x="4" y="6" width="104" height="38" rx="19" fill="#006241" stroke="#006241" stroke-width="2"/><line x1="56" y1="9" x2="56" y2="41" stroke="#d4e9e2" stroke-width="2.4" stroke-linecap="round" opacity="0.7"/></svg>
+  </span>
+  <span class="pill-sprite pill-desktop-only" data-anim="a" style="--px:90%;--py:68%;--pw:92px;--pr:-18deg;--po:0.14;--pd:28s;--pdelay:-16s">
+    <svg viewBox="0 0 120 56" width="120" height="56"><defs><clipPath id="st_c2"><rect x="4" y="6" width="112" height="44" rx="22"/></clipPath></defs><g clip-path="url(#st_c2)"><rect x="4" y="6" width="56" height="44" fill="#5b8779"/><rect x="60" y="6" width="56" height="44" fill="#d4e9e2"/></g><rect x="4" y="6" width="112" height="44" rx="22" fill="none" stroke="#5b8779" stroke-width="2"/></svg>
+  </span>
+  <span class="pill-sprite" data-anim="b" style="--px:7%;--py:82%;--pw:64px;--pr:-16deg;--po:0.13;--pd:32s;--pdelay:-20s">
+    <svg viewBox="0 0 72 72" width="72" height="72"><circle cx="36" cy="36" r="29" fill="#00754a" stroke="#006241" stroke-width="2"/><circle cx="36" cy="36" r="22" fill="#d4e9e2" opacity="0.45"/><line x1="18" y1="36" x2="54" y2="36" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.75"/></svg>
+  </span>
+</div>
 <header class="top-nav">
   <div class="top-nav-inner">
     <a class="top-brand" href="./index.html" translate="no">
@@ -96,7 +158,34 @@
   <ol class="checks" id="checks"></ol>
 </main>
 
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span><strong translate="no">Pharmacy Control</strong> · หน้าตรวจความพร้อม 5 ดวง</span>
+    <button type="button" class="pill-motion-btn" id="pillMotionToggle">
+      <span class="pill-motion-dot" aria-hidden="true"></span>
+      <span id="pillMotionLabel">พักพื้นหลังเม็ดยา</span>
+    </button>
+  </div>
+</footer>
+
 <script>
+(() => {
+  const KEY = 'pharmacy_pill_motion';
+  const btn = document.getElementById('pillMotionToggle');
+  const lbl = document.getElementById('pillMotionLabel');
+  let paused = false;
+  try { paused = localStorage.getItem(KEY) === 'paused'; } catch {}
+  const sync = () => {
+    document.documentElement.dataset.pillMotion = paused ? 'paused' : 'running';
+    if (lbl) lbl.textContent = paused ? 'เล่นพื้นหลังเม็ดยา' : 'พักพื้นหลังเม็ดยา';
+  };
+  sync();
+  if (btn) btn.addEventListener('click', () => {
+    paused = !paused;
+    try { localStorage.setItem(KEY, paused ? 'paused' : 'running'); } catch {}
+    sync();
+  });
+})();
 // ---------- รายการไฟ ----------
 const CHECKS = [
   { id: 'data',     title: '1. อ่านข้อมูลได้ (api/data.js)' },
