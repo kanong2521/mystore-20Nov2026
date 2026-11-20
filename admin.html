@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#1e3932" />
     <meta
       name="description"
-      content="หน้าจัดการระบบสำหรับผู้ดูแล (Admin) เชื่อมต่อ /api/admin เพื่อจัดการบัญชียา ล็อตสต็อก และการคืน/ยกเลิกรายการจ่ายยา"
+      content="หน้าจัดการระบบสำหรับผู้ดูแลและผู้ปฏิบัติงาน — บัญชียา คลังรายล็อต รายการจ่าย คืนยา ยกเลิก และติดตามความปลอดภัย"
     />
     <title>จัดการระบบ (ผู้ดูแล) | ระบบบริหารคลังยาและจ่ายยา</title>
     <link
@@ -20,14 +20,14 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./datetime-ui.css" />
     <style>
       :root {
-        --sb-font-sans: 'Inter', 'Noto Sans Thai', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --sb-font-sans: 'Noto Sans Thai', 'Inter', system-ui, -apple-system, sans-serif;
         --sb-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         --sb-green: #006241;
         --sb-accent: #00754a;
         --sb-house: #1e3932;
+        --sb-house-deep: #172e28;
         --sb-green-light: #d4e9e2;
         --sb-green-tint: rgba(0, 98, 65, 0.14);
         --sb-gold: #cba258;
@@ -37,18 +37,22 @@
         --sb-neutral-cool: #f9f9f9;
         --sb-neutral-warm: #f2f0eb;
         --sb-ceramic: #edebe9;
-        --sb-text: rgba(0, 0, 0, 0.87);
-        --sb-text-soft: rgba(0, 0, 0, 0.58);
+        --sb-text: rgba(0, 0, 0, 0.88);
+        --sb-text-soft: rgba(0, 0, 0, 0.64);
         --sb-text-white: #ffffff;
-        --sb-text-white-soft: rgba(255, 255, 255, 0.8);
-        --sb-red: #c82014;
-        --sb-red-tint: rgba(200, 32, 20, 0.08);
+        --sb-text-white-soft: rgba(255, 255, 255, 0.86);
+        --sb-red: #b42318;
+        --sb-red-bg: #fdf2f1;
+        --sb-red-border: #f3a6a0;
         --sb-border: #d6dbde;
-        --sb-hairline: #e7e7e7;
+        --sb-hairline: #e4e7e9;
         --sb-card-radius: 12px;
         --sb-btn-radius: 50px;
         --sb-shadow-card: 0 0 0.5px rgba(0, 0, 0, 0.14), 0 1px 2px rgba(0, 0, 0, 0.14);
         --sb-shadow-nav: 0 1px 3px rgba(0, 0, 0, 0.1), 0 2px 2px rgba(0, 0, 0, 0.06), 0 0 2px rgba(0, 0, 0, 0.07);
+        --sb-shadow-dialog: 0 12px 32px rgba(0, 0, 0, 0.24);
+        color-scheme: light;
+        accent-color: var(--sb-green);
       }
 
       * { box-sizing: border-box; }
@@ -64,26 +68,33 @@
         background: var(--sb-neutral-warm);
         color: var(--sb-text);
         font-family: var(--sb-font-sans);
-        font-size: 14px;
-        line-height: 1.5;
-        letter-spacing: -0.01em;
+        font-size: 16px;
+        line-height: 1.6;
+        letter-spacing: -0.005em;
         -webkit-font-smoothing: antialiased;
         -webkit-tap-highlight-color: rgba(0, 98, 65, 0.14);
       }
       ::selection { background: var(--sb-green-light); color: var(--sb-house); }
       a { color: inherit; text-decoration: none; }
-      button, a { touch-action: manipulation; }
+      button, a, input, select, textarea { touch-action: manipulation; }
       :focus-visible { outline: 2px solid var(--sb-green); outline-offset: 2px; }
-      h1, h2, h3 { overflow-wrap: break-word; text-wrap: balance; }
+      .hero-band :focus-visible,
+      .site-footer :focus-visible {
+        outline: 2px solid var(--sb-green-light);
+        outline-offset: 2px;
+      }
+      h1, h2, h3 { overflow-wrap: break-word; text-wrap: balance; margin: 0; }
+      p { margin: 0; }
+      [hidden] { display: none !important; }
       .tabular { font-variant-numeric: tabular-nums; }
-      .mono { font-family: var(--sb-font-mono); font-size: 12.5px; }
+      .mono { font-family: var(--sb-font-mono); font-size: 14px; }
 
       .skip-link {
         position: absolute;
         left: 16px;
-        top: -48px;
+        top: -52px;
         z-index: 200;
-        padding: 8px 16px;
+        padding: 10px 18px;
         border-radius: var(--sb-btn-radius);
         background: var(--sb-house);
         color: var(--sb-white);
@@ -92,6 +103,7 @@
       }
       .skip-link:focus { top: 12px; }
 
+      /* แถบนำทางหลัก (เชื่อมครบ 6 หน้าในระบบ) */
       .global-nav {
         position: sticky;
         top: 0;
@@ -106,7 +118,7 @@
         width: 100%;
         max-width: 1440px;
         margin: 0 auto;
-        padding: 10px 40px;
+        padding: 10px 32px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -119,8 +131,8 @@
         flex-shrink: 0;
       }
       .brand-emblem {
-        width: 38px;
-        height: 38px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         background: var(--sb-green);
         color: var(--sb-white);
@@ -128,7 +140,7 @@
         place-items: center;
       }
       .brand-title {
-        font-size: 16px;
+        font-size: 17px;
         font-weight: 700;
         color: var(--sb-house);
         white-space: nowrap;
@@ -144,7 +156,7 @@
         align-items: center;
         min-height: 44px;
         padding: 4px 2px;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 600;
         color: var(--sb-text-soft);
         white-space: nowrap;
@@ -159,22 +171,41 @@
         right: 0;
         bottom: -2px;
         height: 3px;
+        border-radius: 3px 3px 0 0;
         background: var(--sb-green);
       }
       .nav-actions {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+      .asof-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 38px;
+        padding: 6px 14px;
+        border-radius: 8px;
+        background: var(--sb-green-light);
+        border: 1px solid var(--sb-green-tint);
+        color: var(--sb-house);
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
       }
       .mobile-menu-btn {
         display: none;
         align-items: center;
         justify-content: center;
-        min-height: 40px;
-        padding: 6px 14px;
+        min-height: 44px;
+        padding: 8px 16px;
         border-radius: var(--sb-btn-radius);
         border: 1px solid var(--sb-border);
         background: var(--sb-white);
+        color: var(--sb-text);
+        font-family: inherit;
+        font-size: 15px;
         font-weight: 600;
         cursor: pointer;
       }
@@ -187,152 +218,480 @@
         flex-direction: column;
       }
       .mobile-drawer.open { display: flex; }
-      .mobile-drawer a { padding: 10px 12px; border-radius: 8px; font-weight: 600; }
+      .mobile-drawer a { padding: 12px 14px; border-radius: 8px; font-weight: 600; font-size: 16px; }
       .mobile-drawer a.active { background: var(--sb-green-light); color: var(--sb-house); }
 
+      /* ปุ่มทรงแคปซูล */
       .btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
-        min-height: 38px;
+        min-height: 42px;
         padding: 8px 18px;
         border-radius: var(--sb-btn-radius);
         border: 1px solid transparent;
-        font-size: 14px;
+        font-family: inherit;
+        font-size: 15px;
         font-weight: 600;
         cursor: pointer;
         white-space: nowrap;
         transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
       }
-      .btn:active { transform: scale(0.95); }
+      .btn.sm { min-height: 36px; padding: 5px 14px; font-size: 14px; }
+      .btn:active:not(:disabled) { transform: scale(0.95); }
+      .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+      .btn.primary,
       .btn-primary { background: var(--sb-accent); color: var(--sb-white); border-color: var(--sb-accent); }
-      .btn-primary:hover { background: var(--sb-green); border-color: var(--sb-green); }
+      .btn.primary:hover:not(:disabled),
+      .btn-primary:hover:not(:disabled) { background: var(--sb-green); border-color: var(--sb-green); }
+      .btn.secondary { background: var(--sb-white); color: var(--sb-house); border-color: var(--sb-border); }
+      .btn.secondary:hover:not(:disabled) { background: var(--sb-ceramic); border-color: #aeb6bb; }
       .btn-outline-green { background: transparent; color: var(--sb-accent); border-color: var(--sb-accent); }
-      .btn-outline-green:hover { background: var(--sb-green-light); }
-      .btn-outline-white { background: transparent; color: var(--sb-white); border-color: rgba(255, 255, 255, 0.72); }
-      .btn-outline-white:hover { background: rgba(255, 255, 255, 0.14); }
+      .btn-outline-green:hover:not(:disabled) { background: var(--sb-green-light); }
+      .btn.danger { background: var(--sb-white); color: var(--sb-red); border: 1.5px solid var(--sb-red-border); }
+      .btn.danger:hover:not(:disabled) { background: var(--sb-red-bg); border-color: var(--sb-red); }
       .btn-inverted { background: var(--sb-white); color: var(--sb-house); border-color: var(--sb-white); }
-      .btn-inverted:hover { background: var(--sb-green-light); }
+      .btn-inverted:hover:not(:disabled) { background: var(--sb-green-light); border-color: var(--sb-green-light); }
+      .btn-outline-white { background: transparent; color: var(--sb-white); border-color: rgba(255, 255, 255, 0.72); }
+      .btn-outline-white:hover:not(:disabled) { background: rgba(255, 255, 255, 0.14); }
 
+      /* แถบหัวเรื่องและกล่องยืนยันสิทธิ์ผู้ดูแล */
       .hero-band {
         background: var(--sb-house);
         color: var(--sb-text-white);
-        padding: 28px 40px 32px;
+        padding: 26px 32px 28px;
       }
       .hero-inner {
         max-width: 1440px;
         margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+        gap: 24px;
+        align-items: center;
+      }
+      .hero-title {
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.3;
+        color: var(--sb-white);
+        margin-bottom: 6px;
+      }
+      .hero-sub {
+        max-width: 58ch;
+        color: var(--sb-text-white-soft);
+        font-size: 15.5px;
+      }
+      .mobile-asof-pill {
+        display: none;
+        margin-top: 12px;
+        padding: 5px 12px;
+        border-radius: var(--sb-btn-radius);
+        background: rgba(212, 233, 226, 0.18);
+        border: 1px solid rgba(212, 233, 226, 0.34);
+        color: var(--sb-green-light);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .cred-card {
+        background: var(--sb-house-deep);
+        border: 1px solid rgba(212, 233, 226, 0.22);
+        border-radius: var(--sb-card-radius);
+        padding: 16px 18px;
+      }
+      .creds {
         display: flex;
         align-items: flex-end;
-        justify-content: space-between;
-        gap: 20px;
+        gap: 10px;
         flex-wrap: wrap;
       }
-      .hero-title { margin: 0 0 8px; font-size: 30px; font-weight: 600; line-height: 1.25; color: var(--sb-white); }
-      .hero-sub { margin: 0; max-width: 65ch; color: var(--sb-text-white-soft); font-size: 15px; }
-      .hero-ctas { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-
-      .status-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 5px 12px;
-        border-radius: 999px;
-        font-size: 12.5px;
+      .creds .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1 1 160px;
+        min-width: 0;
+      }
+      .creds label {
+        font-size: 13.5px;
         font-weight: 600;
-        background: var(--sb-green-light);
-        color: var(--sb-house);
+        color: var(--sb-green-light);
       }
-      .status-pill.bad { background: var(--sb-red-tint); color: var(--sb-red); }
-      .status-pill.wait {
-        background: var(--sb-ceramic);
-        color: var(--sb-text-soft);
-      }
-      .hero-band .status-pill.wait {
-        background: rgba(255, 255, 255, 0.16);
+      .creds input {
+        width: 100%;
+        min-height: 42px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(212, 233, 226, 0.34);
+        background: rgba(255, 255, 255, 0.1);
         color: var(--sb-white);
+        font-family: inherit;
+        font-size: 15px;
+      }
+      .creds input::placeholder { color: rgba(255, 255, 255, 0.56); }
+      .creds input:focus {
+        outline: none;
+        border-color: var(--sb-green-light);
+        box-shadow: 0 0 0 2px rgba(212, 233, 226, 0.28);
+      }
+      .cred-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .cred-foot {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .cred-status {
+        font-size: 14px;
+        color: var(--sb-green-light);
+      }
+      .cred-status.warn { color: #ffd9a0; font-weight: 600; }
+
+      .lock-bar {
+        background: var(--sb-gold-lightest);
+        border-bottom: 1px solid var(--sb-gold);
+        color: var(--sb-gold-ink);
+        padding: 10px 32px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .lock-bar-inner {
+        max-width: 1440px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
 
-      .container {
+      /* พื้นที่ทำงานหลัก */
+      .wrap {
         width: 100%;
         max-width: 1440px;
         margin: 0 auto;
-        padding: 24px 40px 48px;
+        padding: 22px 32px 52px;
         flex: 1;
       }
-      .grid-2 {
-        display: grid;
-        grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-        gap: 20px;
-        align-items: start;
+
+      .banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        background: #fff8e6;
+        border: 1.5px solid #e0a100;
+        color: #614100;
+        border-radius: var(--sb-card-radius);
+        padding: 14px 18px;
+        margin-bottom: 18px;
       }
-      .card {
+      .banner .title { font-weight: 700; font-size: 17px; margin-bottom: 2px; }
+      .loading { color: var(--sb-text-soft); padding: 36px 0; font-size: 17px; }
+
+      /* แท็บ 4 ส่วน */
+      .tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 4px 0 18px;
+      }
+      .tab {
+        font-family: inherit;
+        font-size: 15.5px;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--sb-white);
+        color: var(--sb-text-soft);
+        border: 1px solid var(--sb-border);
+        border-radius: var(--sb-btn-radius);
+        padding: 9px 20px;
+        min-height: 44px;
+        transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+      }
+      .tab:hover { color: var(--sb-green); border-color: var(--sb-accent); }
+      .tab[aria-selected='true'] {
+        background: var(--sb-house);
+        color: var(--sb-white);
+        border-color: var(--sb-house);
+      }
+      .tab .n { font-weight: 500; opacity: 0.85; font-variant-numeric: tabular-nums; }
+
+      .panel {
         background: var(--sb-white);
         border-radius: var(--sb-card-radius);
         box-shadow: var(--sb-shadow-card);
         padding: 22px 24px;
-        min-width: 0;
+        margin-bottom: 28px;
       }
-      .card.ceramic { background: var(--sb-ceramic); box-shadow: none; border: 1px solid var(--sb-border); }
-      .card-head {
+      .panel-head {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .panel-head h2 {
+        font-size: 21px;
+        font-weight: 700;
+        color: var(--sb-house);
+      }
+      .panel-sub {
+        font-size: 14.5px;
+        color: var(--sb-text-soft);
+        margin-top: 2px;
+      }
+
+      /* ฟอร์มค้นหาและกรองข้อมูล */
+      .toolbar {
+        display: flex;
+        align-items: flex-end;
+        gap: 14px;
         flex-wrap: wrap;
         margin-bottom: 14px;
       }
-      .card-title { margin: 0 0 4px; font-size: 20px; font-weight: 600; color: var(--sb-green); }
-      .card-sub { margin: 0; font-size: 13px; color: var(--sb-text-soft); }
+      .toolbar .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+      .toolbar .field.search-field { flex: 1 1 240px; max-width: 340px; }
+      .toolbar label,
+      .dlg-fields label,
+      .reauth label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--sb-text-soft);
+      }
+      .toolbar input[type='search'],
+      .toolbar select,
+      .dlg-fields input,
+      .dlg-fields select,
+      .dlg-fields textarea,
+      .reauth input {
+        font: inherit;
+        font-size: 15.5px;
+        color: var(--sb-text);
+        background: var(--sb-white);
+        border: 1.5px solid var(--sb-border);
+        border-radius: 8px;
+        padding: 8px 12px;
+        min-height: 44px;
+      }
+      .toolbar input[type='search'] { width: 100%; }
+      .toolbar input:focus,
+      .toolbar select:focus,
+      .dlg-fields input:focus,
+      .dlg-fields select:focus,
+      .dlg-fields textarea:focus,
+      .reauth input:focus {
+        outline: none;
+        border-color: var(--sb-green);
+        box-shadow: 0 0 0 3px rgba(0, 98, 65, 0.14);
+      }
+      .dlg-fields textarea { resize: vertical; min-height: 76px; width: 100%; }
+      .check {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        font-size: 15px;
+        color: var(--sb-text);
+        cursor: pointer;
+      }
+      .check input { width: 18px; height: 18px; accent-color: var(--sb-green); }
+      .count {
+        color: var(--sb-text-soft);
+        font-size: 14.5px;
+        margin-left: auto;
+        align-self: center;
+      }
 
-      .callout {
-        background: var(--sb-gold-lightest);
-        border: 1px solid var(--sb-gold);
-        border-radius: 10px;
-        padding: 12px 16px;
-        color: var(--sb-gold-ink);
+      /* ตาราง */
+      .table-wrap {
+        width: 100%;
+        overflow: auto;
+        max-height: calc(100vh - 320px);
+        min-height: 280px;
+      }
+      table { width: 100%; border-collapse: collapse; font-size: 15px; }
+      thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: var(--sb-ceramic);
+        color: var(--sb-house);
+        font-size: 14px;
+        font-weight: 700;
+        text-align: left;
+        padding: 11px 12px;
+        border-top: 1px solid var(--sb-hairline);
+        border-bottom: 1.5px solid var(--sb-border);
+        white-space: nowrap;
+      }
+      tbody td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--sb-hairline);
+        vertical-align: top;
+      }
+      tbody tr:hover td { background: var(--sb-neutral-cool); }
+      tbody tr:last-child td { border-bottom: none; }
+      th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      td.code { white-space: nowrap; font-weight: 700; color: var(--sb-house); }
+      td.nowrap { white-space: nowrap; }
+      td.actions { white-space: nowrap; }
+      td.actions .btn + .btn { margin-left: 6px; }
+      .muted { color: var(--sb-text-soft); }
+      .small { font-size: 13.5px; color: var(--sb-text-soft); display: block; font-weight: 400; }
+      .empty td { text-align: center; color: var(--sb-text-soft); padding: 28px; }
+      tr.row-expired td { background: #fdf5f4; }
+      .more-row { display: flex; justify-content: center; padding-top: 14px; }
+
+      /* ป้ายสถานะ (สีและข้อความชัดเจน) */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: var(--sb-btn-radius);
+        padding: 2px 11px;
         font-size: 13.5px;
+        font-weight: 700;
+        border: 1px solid;
+        white-space: nowrap;
+      }
+      .b-active { color: var(--sb-house); border-color: #8cc5ae; background: var(--sb-green-light); }
+      .b-quarantine { color: var(--sb-gold-ink); border-color: var(--sb-gold); background: var(--sb-gold-lightest); }
+      .b-written_off { color: var(--sb-text-soft); border-color: var(--sb-border); background: var(--sb-ceramic); }
+      .b-on { color: var(--sb-house); border-color: #8cc5ae; background: var(--sb-green-light); }
+      .b-off { color: var(--sb-red); border-color: var(--sb-red-border); background: var(--sb-red-bg); }
+      .b-dispense { color: var(--sb-house); border-color: #8cc5ae; background: var(--sb-green-light); }
+      .b-return { color: var(--sb-gold-ink); border-color: var(--sb-gold); background: var(--sb-gold-lightest); }
+      .b-void { color: var(--sb-red); border-color: var(--sb-red-border); background: var(--sb-red-bg); }
+      .tag-expired {
+        display: inline-block;
+        margin-left: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--sb-red);
+        background: var(--sb-red-bg);
+        border: 1px solid var(--sb-red-border);
+        border-radius: var(--sb-btn-radius);
+        padding: 1px 9px;
+      }
+
+      /* แท็บผู้ปฏิบัติงาน (รหัสเภสัชกร) */
+      .user-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
         margin-bottom: 18px;
       }
-
-      .action-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
-      .action-item {
+      .u-stat {
         background: var(--sb-neutral-cool);
         border: 1px solid var(--sb-hairline);
         border-radius: 10px;
         padding: 12px 14px;
       }
-      .action-item strong {
-        display: block;
-        color: var(--sb-house);
-        margin-bottom: 2px;
-      }
-      .action-item span {
-        font-size: 12.5px;
-        color: var(--sb-text-soft);
-      }
-
-      .check-row {
+      .u-stat-label { font-size: 13.5px; color: var(--sb-text-soft); margin-bottom: 2px; }
+      .u-stat-val { font-size: 20px; font-weight: 700; color: var(--sb-house); }
+      .u-stat-val.warn { color: var(--sb-gold-ink); }
+      .user-quick-bar {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        gap: 10px;
-        padding: 10px 12px;
-        border-radius: 8px;
-        background: var(--sb-white);
-        border: 1px solid var(--sb-hairline);
-        margin-bottom: 8px;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        background: var(--sb-ceramic);
+        border: 1px solid var(--sb-border);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
       }
+      .user-quick-note { font-size: 14.5px; color: var(--sb-text); max-width: 72ch; }
+      .user-quick-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+      /* กล่องยืนยัน (dialog) */
+      dialog {
+        width: min(620px, calc(100vw - 32px));
+        max-height: calc(100vh - 32px);
+        background: var(--sb-white);
+        color: var(--sb-text);
+        border: 1px solid var(--sb-border);
+        border-radius: 14px;
+        padding: 0;
+        box-shadow: var(--sb-shadow-dialog);
+      }
+      dialog::backdrop { background: rgba(15, 31, 27, 0.55); }
+      .dlg-body { padding: 22px 24px 20px; display: flex; flex-direction: column; gap: 14px; }
+      .dlg-body h3 { font-size: 20px; color: var(--sb-house); }
+      .dlg-summary {
+        background: var(--sb-neutral-cool);
+        border: 1px solid var(--sb-border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 15.5px;
+      }
+      .dlg-summary.danger {
+        background: var(--sb-red-bg);
+        border-color: var(--sb-red-border);
+        color: var(--sb-red);
+      }
+      .dlg-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+      .dlg-fields .field { display: flex; flex-direction: column; gap: 4px; }
+      .dlg-fields .field.full { grid-column: 1 / -1; }
+      .dlg-fields input, .dlg-fields select { width: 100%; }
+      .hint { font-size: 13.5px; color: var(--sb-text-soft); }
+      .req { color: var(--sb-red); }
+      .dlg-error {
+        border: 1.5px solid var(--sb-red-border);
+        background: var(--sb-red-bg);
+        color: var(--sb-red);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-weight: 600;
+      }
+      .reauth {
+        background: var(--sb-gold-lightest);
+        border: 1.5px solid var(--sb-gold);
+        border-radius: 10px;
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .dlg-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; flex-wrap: wrap; }
+
+      /* ข้อความแจ้งสำเร็จ (ใช้ขอบรอบด้านเท่ากัน ไม่ใช้แถบหนาด้านเดียว) */
+      .toast {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 120;
+        width: min(440px, calc(100vw - 32px));
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        background: #f4faf7;
+        border: 1.5px solid var(--sb-accent);
+        border-radius: var(--sb-card-radius);
+        box-shadow: var(--sb-shadow-dialog);
+        padding: 14px 16px;
+      }
+      .toast .t-title { color: var(--sb-green); font-weight: 700; font-size: 15.5px; }
+      .toast .t-msg { flex: 1; font-size: 14.5px; color: var(--sb-text); }
 
       .site-footer {
         background: var(--sb-house);
         color: var(--sb-text-white);
-        padding: 24px 40px 32px;
+        padding: 24px 32px 32px;
         border-top: 3px solid var(--sb-gold);
       }
       .footer-inner {
@@ -344,20 +703,38 @@
         flex-wrap: wrap;
         gap: 16px;
       }
-      .footer-links { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--sb-text-white-soft); }
+      .footer-links { display: flex; gap: 18px; flex-wrap: wrap; font-size: 15px; color: var(--sb-green-light); }
       .footer-links a:hover { color: var(--sb-white); text-decoration: underline; }
 
       @media (max-width: 1240px) {
         .nav-links { display: none; }
         .mobile-menu-btn { display: inline-flex; }
+        .user-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       }
-      @media (max-width: 960px) {
-        .grid-2 { grid-template-columns: 1fr; }
+      @media (max-width: 1024px) {
+        .hero-inner { grid-template-columns: 1fr; }
       }
       @media (max-width: 767px) {
-        .nav-inner, .hero-band, .container, .site-footer { padding-left: 16px; padding-right: 16px; }
+        .nav-inner, .hero-band, .lock-bar, .wrap, .site-footer {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+        .nav-inner { gap: 8px; }
+        .brand-emblem { width: 34px; height: 34px; }
+        .brand-title { font-size: 15px; }
+        .nav-actions { gap: 6px; }
+        .nav-actions .asof-chip { display: none; }
+        .nav-actions .btn.sm { min-height: 38px; padding: 6px 12px; font-size: 13px; }
+        .mobile-menu-btn { min-height: 38px; padding: 6px 12px; font-size: 14px; }
+        .mobile-asof-pill { display: inline-flex; }
         .hero-title { font-size: 24px; }
-        .action-grid { grid-template-columns: 1fr; }
+        .panel { padding: 16px; }
+        .user-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .toolbar .field.search-field { max-width: 100%; }
+      }
+      @media (max-width: 640px) {
+        .dlg-fields { grid-template-columns: 1fr; }
+        .user-summary-grid { grid-template-columns: 1fr; }
       }
       @media (prefers-reduced-motion: reduce) {
         html { scroll-behavior: auto; }
@@ -366,7 +743,7 @@
     </style>
   </head>
   <body>
-    <a class="skip-link" href="#main">ข้ามไปยังเนื้อหาหลัก</a>
+    <a class="skip-link" href="#main">ข้ามไปยังเนื้อหาจัดการระบบ</a>
 
     <header class="global-nav">
       <div class="nav-inner">
@@ -389,8 +766,8 @@
         </nav>
 
         <div class="nav-actions">
-          <span class="nav-clock-chip tabular" id="navClockChip" aria-live="off"></span>
-          <a class="btn btn-outline-green btn-sm" href="./status.html">ยืนยันรหัสผู้ดูแล</a>
+          <span class="asof-chip tabular" id="asOfChip" aria-live="polite">วันอ้างอิง …</span>
+          <button type="button" class="btn btn-outline-green sm" id="navReloadBtn">โหลดข้อมูลล่าสุด</button>
           <button
             type="button"
             class="mobile-menu-btn"
@@ -416,109 +793,355 @@
     <section class="hero-band">
       <div class="hero-inner">
         <div>
-          <h1 class="hero-title">จัดการระบบ (ผู้ดูแล) — <span translate="no">CRUD &amp; Audit Control</span></h1>
+          <h1 class="hero-title">จัดการระบบ (ผู้ดูแลและผู้ปฏิบัติงาน)</h1>
           <p class="hero-sub">
-            ศูนย์ควบคุมการทำงานทั้ง 8 คำสั่งผ่าน <code translate="no">/api/admin</code> ที่ทำงานเป็นธุรกรรมเดียวพร้อมบันทึก
-            <span translate="no">change_log</span> และยืนยันตัวตนด้วย <span translate="no">ADMIN_CODE</span> บนฝั่งเซิร์ฟเวอร์
+            ศูนย์ควบคุมบัญชียา คลังรายล็อต รายการจ่าย และรหัสผู้บันทึกผ่าน
+            <code translate="no">/api/admin</code> · ข้อมูลจำลอง รหัสผู้ป่วยเป็นรหัสแฝง
           </p>
-          <div class="hero-ctas">
-            <a class="btn btn-inverted" href="./status.html">ทดสอบรหัสผู้ดูแลใน Status</a>
-            <a class="btn btn-outline-white" href="./dashboard.html">ดู Dashboard คลังยา</a>
-            <a class="btn btn-outline-white" href="./index.html">กลับหน้าแรก</a>
+          <span class="mobile-asof-pill tabular" id="heroAsOfMobile">วันอ้างอิง …</span>
+        </div>
+
+        <div class="cred-card">
+          <form id="cred-form" class="creds" autocomplete="off" novalidate>
+            <div class="field">
+              <label for="admin-code">รหัสผู้ดูแล (<span translate="no">ADMIN_CODE</span>)</label>
+              <input
+                id="admin-code"
+                type="password"
+                placeholder="กรอกรหัสผู้ดูแล"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div class="field">
+              <label for="rx-code">รหัสเภสัชกรผู้บันทึก</label>
+              <input
+                id="rx-code"
+                type="text"
+                placeholder="เช่น RX-01"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div class="cred-actions">
+              <button type="submit" class="btn btn-inverted sm">บันทึกรหัส</button>
+              <button type="button" id="cred-clear" class="btn btn-outline-white sm">ล้างรหัส</button>
+            </div>
+          </form>
+          <div class="cred-foot">
+            <p id="cred-status" class="cred-status" role="status" aria-live="polite"></p>
+            <a class="btn btn-outline-white sm" href="./status.html#code">ตรวจสิทธิ์ไฟ 5 ดวง</a>
           </div>
         </div>
-        <div class="status-pill wait" id="adminHeroStatus" aria-live="polite">กำลังตรวจประตูล็อกผู้ดูแล…</div>
       </div>
     </section>
 
-    <main class="container" id="main">
-      <div class="callout">
-        <strong>เฟสเตรียมพร้อมเส้นทางผู้ดูแล:</strong>
-        <span translate="no">Endpoint POST /api/admin</span> พร้อมคำสั่งทั้ง 8 รายการแล้วบนเซิร์ฟเวอร์
-        ส่วนหน้าฟอร์มกรอกและแก้ไขข้อมูลจะพัฒนาต่อในเฟสหน้า โดยคุณสามารถทดสอบสิทธิ์ <span translate="no">ADMIN_CODE</span> (ไฟดวงที่ 5) ได้ทันทีในหน้าตรวจสถานะ
+    <div id="lock-note" class="lock-bar" role="note">
+      <div class="lock-bar-inner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        <span>
+          ยังไม่ได้บันทึกรหัสผู้ดูแลและรหัสเภสัชกร ปุ่มแก้ไขข้อมูลจึงถูกปิดไว้ ดูข้อมูลได้ตามปกติ
+          กรอกทั้งสองช่องด้านบนแล้วกด "บันทึกรหัส" หรือเลือกรหัสจากแท็บ "ผู้ปฏิบัติงาน" เพื่อเปิดใช้
+        </span>
+      </div>
+    </div>
+
+    <main class="wrap" id="main">
+      <div id="load-banner" class="banner" role="alert" hidden>
+        <div>
+          <p class="title" id="load-title">โหลดข้อมูลไม่สำเร็จ</p>
+          <p id="load-msg"></p>
+        </div>
+        <button type="button" id="reload-btn" class="btn secondary">โหลดใหม่</button>
       </div>
 
-      <div class="grid-2">
-        <section class="card">
-          <div class="card-head">
+      <p id="loading" class="loading" role="status">กำลังโหลดข้อมูลจากเซิร์ฟเวอร์…</p>
+
+      <div id="app" hidden>
+        <div class="tabs" role="tablist" aria-label="ส่วนจัดการระบบ">
+          <button
+            type="button"
+            class="tab"
+            role="tab"
+            id="tab-catalog"
+            aria-controls="panel-catalog"
+            aria-selected="true"
+          >
+            บัญชียา <span class="n" id="n-catalog"></span>
+          </button>
+          <button
+            type="button"
+            class="tab"
+            role="tab"
+            id="tab-stock"
+            aria-controls="panel-stock"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            คลังรายล็อต <span class="n" id="n-stock"></span>
+          </button>
+          <button
+            type="button"
+            class="tab"
+            role="tab"
+            id="tab-log"
+            aria-controls="panel-log"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            รายการจ่าย <span class="n" id="n-log"></span>
+          </button>
+          <button
+            type="button"
+            class="tab"
+            role="tab"
+            id="tab-users"
+            aria-controls="panel-users"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            ผู้ปฏิบัติงาน (รหัสเภสัชกร) <span class="n" id="n-users"></span>
+          </button>
+        </div>
+
+        <!-- แท็บ 1: บัญชียา -->
+        <section class="panel" role="tabpanel" id="panel-catalog" aria-labelledby="tab-catalog">
+          <div class="panel-head">
             <div>
-              <h2 class="card-title">8 คำสั่งฝั่งผู้ดูแลที่พร้อมบนเซิร์ฟเวอร์ (<span translate="no">api/admin.js</span>)</h2>
-              <p class="card-sub">ทุกคำสั่งต้องส่ง <code translate="no">x-admin-code</code> และ <code translate="no">by</code> (รหัสเภสัชกรผู้บันทึก)</p>
+              <h2>บัญชียา (<span translate="no">v_drug_catalog</span>)</h2>
+              <p class="panel-sub">เพิ่มยาใหม่ แก้ไขรายละเอียด และเปิด/ปิดการใช้งานแทนการลบจริง</p>
             </div>
+            <button type="button" class="btn primary" id="btn-add-drug" data-write>เพิ่มยา</button>
           </div>
-          <div class="action-grid">
-            <div class="action-item">
-              <strong class="mono" translate="no">drug_create</strong>
-              <span>เพิ่มยาใหม่เข้าบัญชียา</span>
+          <div class="toolbar">
+            <div class="field search-field">
+              <label for="cat-q">ค้นหา (รหัสยา / ชื่อสามัญ)</label>
+              <input id="cat-q" type="search" placeholder="เช่น PARA หรือ Paracetamol" />
             </div>
-            <div class="action-item">
-              <strong class="mono" translate="no">drug_update</strong>
-              <span>แก้ไขข้อมูลยาพร้อมระบุเหตุผล</span>
+            <div class="field">
+              <label for="cat-cat">หมวด</label>
+              <select id="cat-cat"><option value="">ทุกหมวด</option></select>
             </div>
-            <div class="action-item">
-              <strong class="mono" translate="no">drug_set_active</strong>
-              <span>เปิด/ปิดใช้งานยาแทนการลบจริง</span>
-            </div>
-            <div class="action-item">
-              <strong class="mono" translate="no">stock_receive</strong>
-              <span>รับล็อตใหม่เข้าคลัง (สร้างรหัส S0xx)</span>
-            </div>
-            <div class="action-item">
-              <strong class="mono" translate="no">stock_fix_expiry</strong>
-              <span>แก้วันหมดอายุของล็อตที่กักกันตามฉลาก</span>
-            </div>
-            <div class="action-item">
-              <strong class="mono" translate="no">stock_set_status</strong>
-              <span>เปลี่ยนสถานะ active / quarantine / written_off</span>
-            </div>
-            <div class="action-item">
-              <strong class="mono" translate="no">dispense_return</strong>
-              <span>รับคืนยาเข้าล็อตเดิมแบบบางส่วนหรือทั้งหมด</span>
-            </div>
-            <div class="action-item">
-              <strong class="mono" translate="no">dispense_void</strong>
-              <span>ยกเลิกรายการจ่ายที่บันทึกผิดพร้อมคืนยอด</span>
-            </div>
+            <label class="check"><input type="checkbox" id="cat-nolot" /> เฉพาะที่ยังไม่มีล็อต</label>
+            <label class="check"><input type="checkbox" id="cat-inactive" /> เฉพาะที่ปิดใช้งาน</label>
+            <span class="count tabular" id="cat-count"></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>รหัสยา</th>
+                  <th>ชื่อสามัญ</th>
+                  <th>ความแรง</th>
+                  <th>รูปแบบ</th>
+                  <th>หมวด</th>
+                  <th class="num">จุดสั่งซื้อ</th>
+                  <th class="num">ยอดใช้ได้</th>
+                  <th class="num">จำนวนล็อต</th>
+                  <th>สถานะ</th>
+                  <th>จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="cat-body"></tbody>
+            </table>
           </div>
         </section>
 
-        <aside class="card ceramic">
-          <div class="card-head">
+        <!-- แท็บ 2: คลังรายล็อต -->
+        <section class="panel" role="tabpanel" id="panel-stock" aria-labelledby="tab-stock" hidden>
+          <div class="panel-head">
             <div>
-              <h2 class="card-title">สรุปสถานะความปลอดภัยและงานค้าง</h2>
-              <p class="card-sub">อ่านจากฐานข้อมูล <span translate="no">Supabase</span> ล่าสุด</p>
+              <h2>คลังรายล็อต</h2>
+              <p class="panel-sub">รับล็อตใหม่ กักกัน ปล่อยใช้ แก้วันหมดอายุตามฉลาก และตัดจำหน่าย</p>
+            </div>
+            <button type="button" class="btn primary" id="btn-receive" data-write>รับยาเข้าล็อตใหม่</button>
+          </div>
+          <div class="toolbar">
+            <div class="field search-field">
+              <label for="stk-q">ค้นหา (รหัสล็อตระบบ / รหัสยา / เลขล็อต)</label>
+              <input id="stk-q" type="search" placeholder="เช่น S007 หรือ PARA500" />
+            </div>
+            <div class="field">
+              <label for="stk-status">สถานะ</label>
+              <select id="stk-status">
+                <option value="">ทุกสถานะ</option>
+                <option value="active">ใช้ได้</option>
+                <option value="quarantine">กักไว้</option>
+                <option value="written_off">ตัดจำหน่าย</option>
+              </select>
+            </div>
+            <span class="count tabular" id="stk-count"></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>รหัสล็อตระบบ</th>
+                  <th>รหัสยา</th>
+                  <th>เลขล็อต</th>
+                  <th>วันรับ</th>
+                  <th>วันหมดอายุ</th>
+                  <th class="num">คงเหลือ</th>
+                  <th class="num">ราคาทุน</th>
+                  <th>สถานะ</th>
+                  <th>จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="stk-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- แท็บ 3: รายการจ่าย -->
+        <section class="panel" role="tabpanel" id="panel-log" aria-labelledby="tab-log" hidden>
+          <div class="panel-head">
+            <div>
+              <h2>รายการจ่าย คืน และยกเลิก</h2>
+              <p class="panel-sub">ตรวจสอบรายการจ่าย รับคืนเข้าล็อตเดิม และยกเลิกรายการที่บันทึกผิด</p>
             </div>
           </div>
-          <div id="adminChecks" aria-live="polite">
-            <div class="check-row">
-              <span>ประตูล็อก <code translate="no">/api/admin</code></span>
-              <span class="status-pill wait" id="chkGuard">กำลังตรวจ…</span>
+          <div class="toolbar">
+            <div class="field search-field">
+              <label for="log-q">ค้นหา (เลขที่ใบจ่าย / รหัสยา / รหัสผู้ป่วย)</label>
+              <input id="log-q" type="search" placeholder="เช่น D0115" />
             </div>
-            <div class="check-row">
-              <span>ล็อตกักกัน (<span translate="no">Quarantine</span>)</span>
-              <span class="status-pill wait" id="chkQuarantine">กำลังตรวจ…</span>
+            <div class="field">
+              <label for="log-type">ประเภท</label>
+              <select id="log-type">
+                <option value="">ทุกประเภท</option>
+                <option value="dispense">จ่าย</option>
+                <option value="return">คืน</option>
+                <option value="void">ยกเลิก</option>
+              </select>
             </div>
-            <div class="check-row">
-              <span>รายการยาปิดใช้งาน</span>
-              <span class="status-pill wait" id="chkInactive">กำลังตรวจ…</span>
+            <span class="count tabular" id="log-count"></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>เลขที่ใบจ่าย</th>
+                  <th>วันเวลา</th>
+                  <th>รหัสยา</th>
+                  <th>เลขล็อต</th>
+                  <th class="num">จำนวน</th>
+                  <th>รหัสผู้ป่วย</th>
+                  <th>รหัสเภสัชกร</th>
+                  <th>ประเภท</th>
+                  <th>จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="log-body"></tbody>
+            </table>
+          </div>
+          <div class="more-row">
+            <button type="button" class="btn secondary" id="log-more" hidden>แสดงเพิ่ม</button>
+          </div>
+        </section>
+
+        <!-- แท็บ 4: ผู้ปฏิบัติงาน (รหัสเภสัชกร & สิทธิ์ผู้ดูแล) -->
+        <section class="panel" role="tabpanel" id="panel-users" aria-labelledby="tab-users" hidden>
+          <div class="panel-head">
+            <div>
+              <h2>ผู้ปฏิบัติงาน (รหัสเภสัชกร) และสิทธิ์ผู้ดูแล</h2>
+              <p class="panel-sub">
+                สรุปรหัสเภสัชกรที่ปรากฏในฐานข้อมูลจริง เลือกสวมสิทธิ์ผู้บันทึกสำหรับเซสชันปัจจุบัน
+              </p>
             </div>
-            <div class="check-row">
-              <span>อุบัติการณ์เปิดอยู่ (<span translate="no">Open Incidents</span>)</span>
-              <span class="status-pill wait" id="chkIncidents">กำลังตรวจ…</span>
+            <span class="count tabular" id="users-count"></span>
+          </div>
+
+          <div class="user-summary-grid" aria-live="polite">
+            <div class="u-stat">
+              <div class="u-stat-label">ผู้บันทึกในเซสชัน</div>
+              <div class="u-stat-val tabular" id="userSessionRx">ยังไม่ระบุ</div>
+            </div>
+            <div class="u-stat">
+              <div class="u-stat-label">สถานะสิทธิ์แก้ไข</div>
+              <div class="u-stat-val" id="userSessionAuth">ล็อกอยู่</div>
+            </div>
+            <div class="u-stat">
+              <div class="u-stat-label">ล็อตกักกันรอตรวจ</div>
+              <div class="u-stat-val tabular" id="sumQuarantine">0</div>
+            </div>
+            <div class="u-stat">
+              <div class="u-stat-label">รายการยาปิดใช้งาน</div>
+              <div class="u-stat-val tabular" id="sumInactive">0</div>
+            </div>
+            <div class="u-stat">
+              <div class="u-stat-label">อุบัติการณ์เปิดอยู่</div>
+              <div class="u-stat-val tabular" id="sumIncidents">0</div>
             </div>
           </div>
-          <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
-            <a class="btn btn-primary" href="./status.html">ทดสอบ ADMIN_CODE (ไฟ 5 ดวง)</a>
-            <a class="btn btn-outline-green" href="./drug_dashboard.html">ดูทะเบียนยา</a>
+
+          <div class="user-quick-bar">
+            <p class="user-quick-note">
+              ระบบนี้ใช้รหัสผู้ดูแลกลาง (<code translate="no">ADMIN_CODE</code>) ร่วมกับรหัสเภสัชกรผู้บันทึก
+              (<code translate="no">by</code>) เพื่อบันทึกลง <code translate="no">change_log</code>
+              ในทุกธุรกรรม (ไม่มีการเก็บรหัสผ่านในฐานข้อมูลหน้าเว็บ และล้างสิทธิ์ทันทีเมื่อปิดแท็บ)
+            </p>
+            <div class="user-quick-actions">
+              <button type="button" class="btn secondary sm" id="jumpQuarantineBtn">ดูล็อตกักกัน</button>
+              <button type="button" class="btn secondary sm" id="jumpInactiveBtn">ดูยาปิดใช้งาน</button>
+              <button type="button" class="btn danger sm" id="clearCredUsersBtn">ล้างสิทธิ์ทันที</button>
+            </div>
           </div>
-        </aside>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>รหัสเภสัชกร</th>
+                  <th class="num">จ่ายยา (ครั้ง)</th>
+                  <th class="num">รับคืน (ครั้ง)</th>
+                  <th class="num">ยกเลิก (ครั้ง)</th>
+                  <th class="num">ยอดจ่ายรวม</th>
+                  <th>ทำรายการล่าสุด</th>
+                  <th>เลือกใช้งาน</th>
+                </tr>
+              </thead>
+              <tbody id="users-body"></tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </main>
+
+    <!-- กล่องยืนยันคำสั่งทั้ง 8 รูปแบบและยืนยันรหัสใหม่เมื่อ 401 -->
+    <dialog id="dlg" aria-labelledby="dlg-title">
+      <form id="dlg-form" class="dlg-body" novalidate>
+        <h3 id="dlg-title"></h3>
+        <p id="dlg-summary" class="dlg-summary"></p>
+        <div id="dlg-fields" class="dlg-fields"></div>
+        <div id="dlg-reauth" class="reauth" hidden>
+          <label for="dlg-reauth-input">รหัสผู้ดูแลใหม่ <span class="req">*</span></label>
+          <input id="dlg-reauth-input" type="password" autocomplete="off" spellcheck="false" />
+          <span class="hint">กรอกแล้วกด "ยืนยัน" อีกครั้ง ระบบจะบันทึกรหัสใหม่และส่งรายการนี้ซ้ำ</span>
+        </div>
+        <p id="dlg-error" class="dlg-error" role="alert" hidden></p>
+        <div class="dlg-actions">
+          <button type="button" class="btn secondary" id="dlg-cancel">ยกเลิก</button>
+          <button type="submit" class="btn primary" id="dlg-ok">ยืนยัน</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden>
+      <div class="t-msg">
+        <p class="t-title">บันทึกสำเร็จ</p>
+        <p id="toast-msg"></p>
+      </div>
+      <button type="button" class="btn secondary sm" id="toast-close" aria-label="ปิดข้อความ">ปิด</button>
+    </div>
 
     <footer class="site-footer">
       <div class="footer-inner">
         <div>
-          <strong>Pharmacy Control</strong> · <span translate="no">Supabase /api/admin Guarded</span>
+          <strong translate="no">Pharmacy Control</strong> · ระบบจัดการผู้ดูแลบน
+          <span translate="no">Supabase /api/admin</span>
         </div>
         <div class="footer-links">
           <a href="./index.html">หน้าแรก</a>
@@ -530,62 +1153,1407 @@
       </div>
     </footer>
 
-    <script src="./sync-store.js"></script>
-    <script src="./datetime-ui.js"></script>
     <script>
-      (async () => {
+      (() => {
         'use strict';
-        const $ = (id) => document.getElementById(id);
 
-        $('mobileMenuBtn').onclick = () => {
-          const open = $('mobileDrawer').classList.toggle('open');
-          $('mobileMenuBtn').setAttribute('aria-expanded', String(open));
+        // =========================================================
+        // ค่าคงที่ (ไม่มีรหัสลับใด ๆ ในโค้ดหน้าเว็บ)
+        // =========================================================
+        const KEY_ADMIN = 'rx_admin_code';
+        const KEY_RX = 'rx_pharmacist_code';
+        const NET_ERR = 'เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้ง';
+        const LOCK_MSG = 'กรอกรหัสผู้ดูแลและรหัสเภสัชกร แล้วกด "บันทึกรหัส" ก่อน';
+        const LOG_PAGE = 50;
+
+        const STATUS_LABEL = { active: 'ใช้ได้', quarantine: 'กักไว้', written_off: 'ตัดจำหน่าย' };
+        const TYPE_LABEL = { dispense: 'จ่าย', return: 'คืน', void: 'ยกเลิก' };
+        const DRUG_FIELD_LABEL = {
+          sku: 'รหัสยา',
+          generic_name: 'ชื่อสามัญ',
+          strength: 'ความแรง',
+          dosage_form: 'รูปแบบ',
+          unit: 'หน่วย',
+          category: 'หมวด',
+          atc_code: 'รหัส ATC',
+          reorder_level: 'จุดสั่งซื้อ'
         };
 
-        if (window.PharmacyDateTime?.mountTimeTicker) {
-          window.PharmacyDateTime.mountTimeTicker(document.createElement('div'), {
-            navClockEl: $('navClockChip')
+        const state = {
+          asOf: null,
+          catalog: [],
+          stock: [],
+          log: [],
+          incidents: [],
+          drugBySku: new Map(),
+          logShown: LOG_PAGE,
+          loadedOnce: false,
+          halted: false,
+          syncSeq: 0
+        };
+
+        // สื่อสารซิงก์ข้ามแท็บเมื่อมีการแก้ไขจากหน้าผู้ดูแลหรือหน้าขายยา
+        let syncChannel = null;
+        try {
+          if (typeof BroadcastChannel !== 'undefined') {
+            syncChannel = new BroadcastChannel('pharmacy-supabase-sync');
+          }
+        } catch {
+          syncChannel = null;
+        }
+
+        // =========================================================
+        // ตัวช่วย DOM (สร้างผ่าน createElement และ textContent เท่านั้น)
+        // =========================================================
+        const $ = (sel) => document.querySelector(sel);
+
+        function el(tag, props, ...children) {
+          const n = document.createElement(tag);
+          if (props) {
+            for (const [k, v] of Object.entries(props)) {
+              if (v === null || v === undefined || v === false) continue;
+              if (k === 'class') n.className = v;
+              else if (k === 'text') n.textContent = v;
+              else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);
+              else n.setAttribute(k, v === true ? '' : String(v));
+            }
+          }
+          for (const c of children.flat()) {
+            if (c === null || c === undefined || c === false) continue;
+            n.append(c instanceof Node ? c : String(c));
+          }
+          return n;
+        }
+
+        const str = (v) => (v === null || v === undefined ? '' : String(v));
+
+        $('#mobileMenuBtn').addEventListener('click', () => {
+          const open = $('#mobileDrawer').classList.toggle('open');
+          $('#mobileMenuBtn').setAttribute('aria-expanded', String(open));
+        });
+
+        // =========================================================
+        // จัดเก็บสิทธิ์ผู้ดูแลเฉพาะใน sessionStorage ของแท็บปัจจุบัน
+        // =========================================================
+        function ssGet(k) {
+          try {
+            return sessionStorage.getItem(k) || '';
+          } catch {
+            return '';
+          }
+        }
+        function ssSet(k, v) {
+          try {
+            sessionStorage.setItem(k, v);
+            return true;
+          } catch {
+            return false;
+          }
+        }
+        function ssDel(k) {
+          try {
+            sessionStorage.removeItem(k);
+          } catch {
+            /* ignore */
+          }
+        }
+        function creds() {
+          return { admin: ssGet(KEY_ADMIN), by: ssGet(KEY_RX) };
+        }
+        function canWrite() {
+          const c = creds();
+          return Boolean(c.admin && c.by);
+        }
+
+        // =========================================================
+        // จัดรูปแบบตัวเลขและวันที่ (อ้างอิงสตริง YYYY-MM-DD จากเซิร์ฟเวอร์เท่านั้น)
+        // =========================================================
+        function fmtInt(v) {
+          if (v === null || v === undefined || v === '') return '-';
+          const x = Number(v);
+          return Number.isFinite(x) ? Math.round(x).toLocaleString('en-US') : '-';
+        }
+        function fmtMoney(v) {
+          if (v === null || v === undefined || v === '') return '-';
+          const x = Number(v);
+          return Number.isFinite(x)
+            ? x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : '-';
+        }
+        function fmtDate(v) {
+          if (v === null || v === undefined || v === '') return null;
+          const s = String(v);
+          return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : s;
+        }
+        function isTrue(v) {
+          return v === true || v === 'true' || v === 1 || v === 't';
+        }
+        function drugLabel(sku) {
+          const d = state.drugBySku.get(sku);
+          return d ? [d.generic_name, d.strength].filter(Boolean).join(' ') : '';
+        }
+        function errText(e) {
+          if (e === null || e === undefined) return '';
+          if (typeof e === 'string') return e;
+          if (typeof e === 'object' && e.message) return String(e.message);
+          try {
+            return JSON.stringify(e);
+          } catch {
+            return String(e);
+          }
+        }
+        function parseDispenseNum(id) {
+          const m = String(id || '').match(/\d+/);
+          return m ? Number(m[0]) : -1;
+        }
+
+        // =========================================================
+        // ล็อก/ปลดล็อกปุ่มแก้ไขและซิงก์สถานะสิทธิ์
+        // =========================================================
+        function updateLock() {
+          const ok = canWrite();
+          document.querySelectorAll('[data-write]').forEach((b) => {
+            b.disabled = !ok;
+            if (ok) b.removeAttribute('title');
+            else b.title = LOCK_MSG;
+          });
+          $('#lock-note').hidden = ok;
+          updateCredStatus();
+          renderUsersSummaryOnly();
+        }
+
+        function updateCredStatus() {
+          const c = creds();
+          const st = $('#cred-status');
+          const typedAdmin = $('#admin-code').value;
+          const typedRx = $('#rx-code').value.trim().toUpperCase();
+          st.classList.remove('warn');
+          if (c.admin && c.by) {
+            if (typedAdmin !== c.admin || typedRx !== c.by) {
+              st.textContent =
+                'มีการแก้รหัสที่ยังไม่บันทึก กด "บันทึกรหัส" เพื่อใช้ค่าใหม่ (ตอนนี้ใช้ผู้บันทึก ' + c.by + ')';
+              st.classList.add('warn');
+            } else {
+              st.textContent = 'บันทึกรหัสแล้ว · ผู้บันทึก ' + c.by;
+            }
+          } else if (c.by) {
+            st.textContent = 'เลือกรหัสเภสัชกร ' + c.by + ' แล้ว กรอกรหัสผู้ดูแลแล้วกด "บันทึกรหัส"';
+            st.classList.add('warn');
+          } else {
+            st.textContent = 'ยังไม่ได้บันทึกรหัสผู้ดูแลและรหัสเภสัชกร';
+            st.classList.add('warn');
+          }
+        }
+
+        function clearCredentials() {
+          ssDel(KEY_ADMIN);
+          ssDel(KEY_RX);
+          $('#admin-code').value = '';
+          $('#rx-code').value = '';
+          updateLock();
+        }
+
+        $('#cred-form').addEventListener('submit', (e) => {
+          e.preventDefault();
+          const admin = $('#admin-code').value;
+          const rx = $('#rx-code').value.trim().toUpperCase();
+          $('#rx-code').value = rx;
+          if (!admin.trim() || !rx) {
+            const st = $('#cred-status');
+            st.textContent = 'กรอกให้ครบทั้งรหัสผู้ดูแลและรหัสเภสัชกร';
+            st.classList.add('warn');
+            (!admin.trim() ? $('#admin-code') : $('#rx-code')).focus();
+            return;
+          }
+          ssSet(KEY_ADMIN, admin);
+          ssSet(KEY_RX, rx);
+          updateLock();
+          renderUsers();
+        });
+
+        $('#cred-clear').addEventListener('click', () => {
+          clearCredentials();
+          renderUsers();
+        });
+        $('#admin-code').addEventListener('input', updateCredStatus);
+        $('#rx-code').addEventListener('input', updateCredStatus);
+
+        // =========================================================
+        // โหลดข้อมูลล่าสุดจาก GET /api/data
+        // =========================================================
+        function showLoadError(title, msg) {
+          $('#load-title').textContent = title;
+          $('#load-msg').textContent = msg;
+          $('#load-banner').hidden = false;
+          $('#loading').hidden = true;
+          $('#app').hidden = !state.loadedOnce || state.halted;
+        }
+
+        async function loadData() {
+          const btn = $('#reload-btn');
+          const navBtn = $('#navReloadBtn');
+          btn.disabled = true;
+          navBtn.disabled = true;
+          navBtn.textContent = 'กำลังโหลด…';
+          if (!state.loadedOnce) $('#loading').hidden = false;
+
+          let res, json;
+          try {
+            res = await fetch('/api/data', { cache: 'no-store', headers: { Accept: 'application/json' } });
+            json = await res.json();
+          } catch {
+            btn.disabled = false;
+            navBtn.disabled = false;
+            navBtn.textContent = 'โหลดข้อมูลล่าสุด';
+            showLoadError(
+              'โหลดข้อมูลไม่สำเร็จ',
+              NET_ERR + (state.loadedOnce ? ' (ตัวเลขบนจออาจไม่ตรงกับฐานข้อมูล)' : '')
+            );
+            return;
+          }
+          btn.disabled = false;
+          navBtn.disabled = false;
+          navBtn.textContent = 'โหลดข้อมูลล่าสุด';
+
+          if (!res.ok || !json || typeof json !== 'object') {
+            const serverErr = json && (json.error || json.message);
+            showLoadError(
+              'โหลดข้อมูลไม่สำเร็จ',
+              (serverErr ? String(serverErr) : 'ระบบตอบกลับผิดพลาด (HTTP ' + res.status + ')') +
+                (state.loadedOnce ? ' (ตัวเลขบนจออาจไม่ตรงกับฐานข้อมูล)' : '')
+            );
+            return;
+          }
+
+          if (json.catalog_error) {
+            state.halted = true;
+            showLoadError(
+              'ยังไม่ได้ติดตั้งส่วนจัดการข้อมูล',
+              errText(json.catalog_error) + ' · ติดตั้ง crud.sql แล้วกด "โหลดใหม่"'
+            );
+            return;
+          }
+
+          state.halted = false;
+          const items = (x) => (x && Array.isArray(x.items) ? x.items : []);
+          const metaAsOf = (x) => (x && x.meta && x.meta.as_of ? x.meta.as_of : null);
+
+          state.asOf = fmtDate(
+            metaAsOf(json.drugs) || metaAsOf(json.catalog) || metaAsOf(json.stock) || metaAsOf(json.dispense_log)
+          );
+          state.catalog = items(json.catalog);
+          state.stock = items(json.stock);
+          state.log = items(json.dispense_log);
+          state.incidents = items(json.incidents);
+          state.drugBySku = new Map(state.catalog.map((d) => [d.sku, d]));
+          state.loadedOnce = true;
+
+          const asOfLabel = 'วันอ้างอิง ' + (state.asOf || 'ไม่ทราบ');
+          $('#asOfChip').textContent = asOfLabel;
+          $('#heroAsOfMobile').textContent = asOfLabel;
+          $('#n-catalog').textContent = '(' + state.catalog.length + ')';
+          $('#n-stock').textContent = '(' + state.stock.length + ')';
+          $('#n-log').textContent = '(' + state.log.length + ')';
+
+          rebuildCategoryFilter();
+          renderAll();
+
+          $('#load-banner').hidden = true;
+          $('#loading').hidden = true;
+          $('#app').hidden = false;
+        }
+
+        $('#reload-btn').addEventListener('click', loadData);
+        $('#navReloadBtn').addEventListener('click', loadData);
+
+        function renderAll() {
+          renderCatalog();
+          renderStock();
+          renderLog();
+          renderUsers();
+          updateLock();
+        }
+
+        // =========================================================
+        // ตัวช่วยสร้างตาราง
+        // =========================================================
+        function td(text, cls) {
+          return el('td', { class: cls || null, text: str(text) });
+        }
+        function badge(text, cls) {
+          return el('span', { class: 'badge ' + cls, text });
+        }
+        function actBtn(label, variant, onClick) {
+          const ok = canWrite();
+          return el('button', {
+            type: 'button',
+            class: 'btn sm ' + variant,
+            'data-write': true,
+            disabled: !ok,
+            title: ok ? null : LOCK_MSG,
+            onclick: onClick,
+            text: label
+          });
+        }
+        function emptyRow(cols, text) {
+          return el('tr', { class: 'empty' }, el('td', { colspan: cols, text }));
+        }
+        function distinct(field, extra) {
+          const set = new Set();
+          state.catalog.forEach((d) => {
+            const v = str(d[field]).trim();
+            if (v) set.add(v);
+          });
+          if (extra) set.add(extra);
+          return [...set].sort((a, b) => a.localeCompare(b, 'th'));
+        }
+
+        // =========================================================
+        // แท็บ 1: บัญชียา
+        // =========================================================
+        function rebuildCategoryFilter() {
+          const sel = $('#cat-cat');
+          const cur = sel.value;
+          const allCats = distinct('category');
+          sel.replaceChildren(
+            el('option', { value: '', text: 'ทุกหมวด' }),
+            ...allCats.map((c) => el('option', { value: c, text: c }))
+          );
+          sel.value = allCats.includes(cur) ? cur : '';
+        }
+
+        function renderCatalog() {
+          const q = $('#cat-q').value.trim().toLowerCase();
+          const cat = $('#cat-cat').value;
+          const noLot = $('#cat-nolot').checked;
+          const inactive = $('#cat-inactive').checked;
+
+          const rows = state.catalog
+            .filter((d) => {
+              if (q && !(str(d.sku).toLowerCase().includes(q) || str(d.generic_name).toLowerCase().includes(q))) {
+                return false;
+              }
+              if (cat && str(d.category) !== cat) return false;
+              if (noLot && (Number(d.lot_count) || 0) !== 0) return false;
+              if (inactive && isTrue(d.is_active)) return false;
+              return true;
+            })
+            .sort((a, b) => str(a.sku).localeCompare(str(b.sku), 'en', { numeric: true }));
+
+          $('#cat-body').replaceChildren(
+            ...(rows.length ? rows.map(catalogRow) : [emptyRow(10, 'ไม่พบรายการที่ตรงกับเงื่อนไข')])
+          );
+          $('#cat-count').textContent = 'แสดง ' + rows.length + ' จาก ' + state.catalog.length + ' รายการ';
+        }
+
+        function catalogRow(d) {
+          const active = isTrue(d.is_active);
+          const qtyCell = el('td', { class: 'num' }, fmtInt(d.usable_qty));
+          if (Number(d.quarantine_qty) > 0) {
+            qtyCell.append(el('span', { class: 'small', text: 'กักไว้ ' + fmtInt(d.quarantine_qty) }));
+          }
+          return el(
+            'tr',
+            null,
+            td(d.sku, 'code'),
+            td(d.generic_name),
+            td(d.strength, 'nowrap'),
+            td(d.dosage_form),
+            td(d.category),
+            td(fmtInt(d.reorder_level), 'num'),
+            qtyCell,
+            td(fmtInt(d.lot_count), 'num'),
+            el('td', null, badge(active ? 'ใช้งาน' : 'ปิดใช้งาน', active ? 'b-on' : 'b-off')),
+            el(
+              'td',
+              { class: 'actions' },
+              actBtn('แก้ไข', 'secondary', () => openEditDrug(d)),
+              active
+                ? actBtn('ปิดใช้งาน', 'danger', () => openSetActive(d, false))
+                : actBtn('เปิดใช้งาน', 'secondary', () => openSetActive(d, true))
+            )
+          );
+        }
+
+        ['#cat-q', '#cat-cat', '#cat-nolot', '#cat-inactive'].forEach((s) => {
+          $(s).addEventListener('input', () => {
+            renderCatalog();
+            updateLock();
+          });
+        });
+
+        // =========================================================
+        // แท็บ 2: คลังรายล็อต
+        // =========================================================
+        function renderStock() {
+          const q = $('#stk-q').value.trim().toLowerCase();
+          const st = $('#stk-status').value;
+
+          const rows = state.stock
+            .filter((s) => {
+              if (
+                q &&
+                !(
+                  str(s.stock_id).toLowerCase().includes(q) ||
+                  str(s.sku).toLowerCase().includes(q) ||
+                  str(s.lot).toLowerCase().includes(q)
+                )
+              ) {
+                return false;
+              }
+              if (st && s.status !== st) return false;
+              return true;
+            })
+            .sort((a, b) => str(a.stock_id).localeCompare(str(b.stock_id), 'en', { numeric: true }));
+
+          $('#stk-body').replaceChildren(
+            ...(rows.length ? rows.map(stockRow) : [emptyRow(9, 'ไม่พบล็อตที่ตรงกับเงื่อนไข')])
+          );
+          $('#stk-count').textContent = 'แสดง ' + rows.length + ' จาก ' + state.stock.length + ' ล็อต';
+        }
+
+        function stockRow(s) {
+          const exp = fmtDate(s.expiry);
+          const expired = Boolean(exp && state.asOf && exp < state.asOf);
+
+          const expCell = el('td', { class: 'nowrap tabular' });
+          if (exp) {
+            expCell.append(exp);
+            if (expired) expCell.append(el('span', { class: 'tag-expired', text: 'หมดอายุแล้ว' }));
+          } else {
+            expCell.append(el('span', { class: 'muted', text: 'ไม่ระบุ' }));
+          }
+
+          const skuCell = el('td', { class: 'code' }, str(s.sku));
+          const name = drugLabel(s.sku);
+          if (name) skuCell.append(el('span', { class: 'small', text: name }));
+
+          const statusText = STATUS_LABEL[s.status] || str(s.status);
+          const actions = el('td', { class: 'actions' });
+          if (s.status === 'active') {
+            actions.append(
+              actBtn('กักไว้', 'secondary', () => openStockStatus(s, 'quarantine')),
+              actBtn('ตัดจำหน่าย', 'danger', () => openStockStatus(s, 'written_off'))
+            );
+          } else if (s.status === 'quarantine') {
+            actions.append(
+              actBtn('ปล่อยใช้', 'secondary', () => openStockStatus(s, 'active')),
+              actBtn('แก้วันหมดอายุ', 'secondary', () => openFixExpiry(s)),
+              actBtn('ตัดจำหน่าย', 'danger', () => openStockStatus(s, 'written_off'))
+            );
+          }
+
+          return el(
+            'tr',
+            { class: expired ? 'row-expired' : null },
+            td(s.stock_id, 'code'),
+            skuCell,
+            td(s.lot, 'nowrap mono'),
+            td(fmtDate(s.received_date) || '-', 'nowrap tabular'),
+            expCell,
+            td(fmtInt(s.qty_on_hand), 'num'),
+            td(fmtMoney(s.unit_cost), 'num'),
+            el('td', null, badge(statusText, 'b-' + (STATUS_LABEL[s.status] ? s.status : 'written_off'))),
+            actions
+          );
+        }
+
+        ['#stk-q', '#stk-status'].forEach((s) => {
+          $(s).addEventListener('input', () => {
+            renderStock();
+            updateLock();
+          });
+        });
+
+        // =========================================================
+        // แท็บ 3: รายการจ่าย
+        // =========================================================
+        function sortedLog() {
+          return [...state.log].sort((a, b) => {
+            const na = parseDispenseNum(a.dispense_id);
+            const nb = parseDispenseNum(b.dispense_id);
+            if (na !== nb) return nb - na;
+            const t = str(b.datetime).localeCompare(str(a.datetime));
+            return t !== 0 ? t : str(b.dispense_id).localeCompare(str(a.dispense_id), 'en', { numeric: true });
           });
         }
 
-        const [guardProbe, dataRes] = await Promise.allSettled([
-          fetch('/api/admin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-admin-code': 'probe-' + Math.random().toString(36).slice(2) },
-            body: JSON.stringify({ action: 'dispense_void' })
-          }),
-          window.PharmacySync.loadAll()
-        ]);
+        function renderLog() {
+          const q = $('#log-q').value.trim().toLowerCase();
+          const ty = $('#log-type').value;
 
-        let guardOk = false;
-        if (guardProbe.status === 'fulfilled' && guardProbe.value.status === 401) {
-          guardOk = true;
-          $('chkGuard').textContent = 'ล็อกแน่น (401)';
-          $('chkGuard').className = 'status-pill';
-        } else {
-          $('chkGuard').textContent = 'ตรวจไม่ผ่าน';
-          $('chkGuard').className = 'status-pill bad';
+          const rows = sortedLog().filter((r) => {
+            if (
+              q &&
+              !(
+                str(r.dispense_id).toLowerCase().includes(q) ||
+                str(r.sku).toLowerCase().includes(q) ||
+                str(r.patient_code).toLowerCase().includes(q)
+              )
+            ) {
+              return false;
+            }
+            if (ty && r.type !== ty) return false;
+            return true;
+          });
+
+          const shown = rows.slice(0, state.logShown);
+          $('#log-body').replaceChildren(
+            ...(shown.length ? shown.map(logRow) : [emptyRow(9, 'ไม่พบรายการที่ตรงกับเงื่อนไข')])
+          );
+          $('#log-count').textContent =
+            'แสดง ' +
+            shown.length +
+            ' จาก ' +
+            rows.length +
+            ' รายการ' +
+            (rows.length !== state.log.length ? ' (ทั้งหมด ' + state.log.length + ')' : '');
+
+          const more = $('#log-more');
+          const left = rows.length - shown.length;
+          more.hidden = left <= 0;
+          more.textContent = 'แสดงเพิ่ม (' + Math.min(LOG_PAGE, left) + ' จากที่เหลือ ' + left + ')';
         }
 
-        if (dataRes.status === 'fulfilled') {
-          const b = dataRes.value;
-          const qCount = b.stock.items.filter((s) => s.status === 'quarantine').length;
-          const inactCount = b.drugs.items.filter((d) => d.is_active === false).length;
-          const openInc = (b.incidents?.items || []).filter((i) => i.status === 'open').length;
-
-          $('chkQuarantine').textContent = `${qCount} ล็อต`;
-          $('chkQuarantine').className = 'status-pill tabular';
-          $('chkInactive').textContent = `${inactCount} SKU`;
-          $('chkInactive').className = 'status-pill tabular';
-          $('chkIncidents').textContent = `${openInc} รายการ`;
-          $('chkIncidents').className = openInc > 0 ? 'status-pill bad tabular' : 'status-pill tabular';
-
-          $('adminHeroStatus').textContent = guardOk ? 'ประตูล็อก ADMIN_CODE พร้อมทำงาน' : 'ตรวจสิทธิ์ผู้ดูแลไม่ผ่าน';
-          $('adminHeroStatus').className = guardOk ? 'status-pill' : 'status-pill bad';
-        } else {
-          $('adminHeroStatus').textContent = 'โหลดข้อมูลคลังไม่สำเร็จ';
-          $('adminHeroStatus').className = 'status-pill bad';
+        function logRow(r) {
+          const actions = el('td', { class: 'actions' });
+          if (r.type === 'dispense') {
+            actions.append(
+              actBtn('คืนยา', 'secondary', () => openReturn(r)),
+              actBtn('ยกเลิกรายการ', 'danger', () => openVoid(r))
+            );
+          }
+          return el(
+            'tr',
+            null,
+            td(r.dispense_id, 'code'),
+            td(str(r.datetime).slice(0, 19).replace('T', ' '), 'nowrap tabular'),
+            td(r.sku, 'code'),
+            td(r.lot, 'nowrap mono'),
+            td(fmtInt(r.qty), 'num'),
+            td(r.patient_code, 'nowrap'),
+            td(r.pharmacist_code, 'nowrap'),
+            el('td', null, badge(TYPE_LABEL[r.type] || str(r.type), 'b-' + (TYPE_LABEL[r.type] ? r.type : 'void'))),
+            actions
+          );
         }
+
+        ['#log-q', '#log-type'].forEach((s) => {
+          $(s).addEventListener('input', () => {
+            state.logShown = LOG_PAGE;
+            renderLog();
+            updateLock();
+          });
+        });
+        $('#log-more').addEventListener('click', () => {
+          state.logShown += LOG_PAGE;
+          renderLog();
+          updateLock();
+        });
+
+        // =========================================================
+        // แท็บ 4: ผู้ปฏิบัติงาน (รหัสเภสัชกรและสรุปความปลอดภัย)
+        // =========================================================
+        function buildOperatorDirectory() {
+          const map = new Map();
+          for (const row of state.log) {
+            const rawCode = str(row.pharmacist_code).trim();
+            if (!rawCode) continue;
+            const code = rawCode.toUpperCase();
+            if (!map.has(code)) {
+              map.set(code, { code, dispense: 0, return: 0, void: 0, totalQty: 0, lastDt: '' });
+            }
+            const entry = map.get(code);
+            const ty = str(row.type || 'dispense');
+            if (ty === 'return') entry.return += 1;
+            else if (ty === 'void') entry.void += 1;
+            else {
+              entry.dispense += 1;
+              entry.totalQty += Number(row.qty || 0);
+            }
+            const dt = str(row.datetime).slice(0, 19);
+            if (dt && dt > entry.lastDt) entry.lastDt = dt;
+          }
+          return [...map.values()].sort((a, b) => {
+            const totalA = a.dispense + a.return + a.void;
+            const totalB = b.dispense + b.return + b.void;
+            if (totalB !== totalA) return totalB - totalA;
+            return a.code.localeCompare(b.code, 'en', { numeric: true });
+          });
+        }
+
+        function renderUsersSummaryOnly() {
+          const c = creds();
+          const quarantineCount = state.stock.filter((s) => s.status === 'quarantine').length;
+          const inactiveCount = state.catalog.filter((d) => !isTrue(d.is_active)).length;
+          const openIncidentsCount = state.incidents.filter((i) => str(i.status) === 'open').length;
+
+          $('#userSessionRx').textContent = c.by || 'ยังไม่ระบุ';
+          const authEl = $('#userSessionAuth');
+          authEl.textContent = c.admin && c.by ? 'ปลดล็อกแล้ว' : 'ล็อกอยู่';
+          authEl.className = 'u-stat-val' + (c.admin && c.by ? '' : ' warn');
+
+          const qEl = $('#sumQuarantine');
+          qEl.textContent = fmtInt(quarantineCount);
+          qEl.className = 'u-stat-val tabular' + (quarantineCount > 0 ? ' warn' : '');
+
+          $('#sumInactive').textContent = fmtInt(inactiveCount);
+
+          const incEl = $('#sumIncidents');
+          incEl.textContent = fmtInt(openIncidentsCount);
+          incEl.className = 'u-stat-val tabular' + (openIncidentsCount > 0 ? ' warn' : '');
+        }
+
+        function selectOperatorCode(code) {
+          const normalized = str(code).trim().toUpperCase();
+          if (!normalized) return;
+          $('#rx-code').value = normalized;
+          ssSet(KEY_RX, normalized);
+          if ($('#admin-code').value.trim()) {
+            ssSet(KEY_ADMIN, $('#admin-code').value);
+          }
+          updateLock();
+          renderUsers();
+          if (!$('#admin-code').value.trim()) {
+            $('#admin-code').focus();
+          }
+        }
+
+        function renderUsers() {
+          renderUsersSummaryOnly();
+          const operators = buildOperatorDirectory();
+          const curBy = creds().by;
+          $('#n-users').textContent = '(' + operators.length + ')';
+          $('#users-count').textContent = 'พบผู้ปฏิบัติงาน ' + operators.length + ' รหัสในประวัติการจ่าย';
+
+          const body = $('#users-body');
+          if (!operators.length) {
+            body.replaceChildren(emptyRow(7, 'ยังไม่มีประวัติรหัสเภสัชกรในระบบ'));
+            return;
+          }
+
+          body.replaceChildren(
+            ...operators.map((op) => {
+              const isSelected = curBy === op.code;
+              const codeCell = el('td', { class: 'code' }, op.code);
+              if (isSelected) {
+                codeCell.append(el('span', { class: 'small', text: 'กำลังใช้งานในเซสชันนี้' }));
+              }
+              return el(
+                'tr',
+                null,
+                codeCell,
+                td(fmtInt(op.dispense), 'num'),
+                td(fmtInt(op.return), 'num'),
+                td(fmtInt(op.void), 'num'),
+                td(fmtInt(op.totalQty), 'num'),
+                td(op.lastDt ? op.lastDt.replace('T', ' ') : '-', 'nowrap tabular'),
+                el(
+                  'td',
+                  { class: 'actions' },
+                  el('button', {
+                    type: 'button',
+                    class: 'btn sm ' + (isSelected ? 'primary' : 'secondary'),
+                    onclick: () => selectOperatorCode(op.code),
+                    text: isSelected ? 'กำลังใช้งาน' : 'ใช้รหัสนี้เป็นผู้บันทึก'
+                  })
+                )
+              );
+            })
+          );
+        }
+
+        $('#jumpQuarantineBtn').addEventListener('click', () => {
+          $('#stk-status').value = 'quarantine';
+          renderStock();
+          selectTab('stock', true);
+        });
+
+        $('#jumpInactiveBtn').addEventListener('click', () => {
+          $('#cat-inactive').checked = true;
+          renderCatalog();
+          selectTab('catalog', true);
+        });
+
+        $('#clearCredUsersBtn').addEventListener('click', () => {
+          clearCredentials();
+          renderUsers();
+        });
+
+        // =========================================================
+        // การสลับแท็บและการกดคีย์บอร์ดซ้าย/ขวา
+        // =========================================================
+        const TABS = ['catalog', 'stock', 'log', 'users'];
+        function selectTab(name, focus) {
+          TABS.forEach((t) => {
+            const on = t === name;
+            const tab = $('#tab-' + t);
+            tab.setAttribute('aria-selected', on ? 'true' : 'false');
+            tab.tabIndex = on ? 0 : -1;
+            $('#panel-' + t).hidden = !on;
+            if (on && focus) tab.focus();
+          });
+        }
+        TABS.forEach((t, i) => {
+          const tab = $('#tab-' + t);
+          tab.addEventListener('click', () => selectTab(t));
+          tab.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') selectTab(TABS[(i + 1) % TABS.length], true);
+            else if (e.key === 'ArrowLeft') selectTab(TABS[(i + TABS.length - 1) % TABS.length], true);
+          });
+        });
+
+        // =========================================================
+        // ส่งคำสั่งแก้ไข POST /api/admin (ยืนยันผ่าน header x-admin-code)
+        // =========================================================
+        async function postAdmin(body, adminCode) {
+          let res, data;
+          try {
+            res = await fetch('/api/admin', {
+              method: 'POST',
+              cache: 'no-store',
+              headers: { 'Content-Type': 'application/json', 'x-admin-code': adminCode },
+              body: JSON.stringify(body)
+            });
+          } catch {
+            return { ok: false, message: NET_ERR };
+          }
+          try {
+            data = await res.json();
+          } catch {
+            return { ok: false, status: res.status, message: NET_ERR };
+          }
+          const msg = data && data.message ? String(data.message) : '';
+          if (res.status === 401) return { ok: false, status: 401, message: msg || 'รหัสผู้ดูแลไม่ถูกต้อง' };
+          if (res.ok && data && data.ok === true) return { ok: true, data };
+          return {
+            ok: false,
+            status: res.status,
+            message: msg || 'ระบบตอบกลับผิดพลาด (HTTP ' + res.status + ')'
+          };
+        }
+
+        // =========================================================
+        // กล่องยืนยันกลาง (ใช้ร่วมกันทั้ง 8 คำสั่ง)
+        // =========================================================
+        const dlg = $('#dlg');
+        let dlgCfg = null;
+        let dlgBusy = false;
+        let fieldSeq = 0;
+
+        function buildField(f) {
+          const id = 'f-' + f.name + '-' + ++fieldSeq;
+          let input;
+          if (f.type === 'select') {
+            input = el(
+              'select',
+              { id, name: f.name },
+              el('option', { value: '', text: 'เลือก' + (f.label ? f.label : '') }),
+              ...f.options.map((o) => el('option', { value: o.value, text: o.label }))
+            );
+            input.value = str(f.value);
+          } else if (f.type === 'textarea') {
+            input = el('textarea', { id, name: f.name, rows: 2, placeholder: f.placeholder || null });
+            input.value = str(f.value);
+          } else {
+            input = el('input', {
+              id,
+              name: f.name,
+              type: f.type || 'text',
+              step: f.step || null,
+              min: f.min !== undefined ? f.min : null,
+              inputmode: f.inputmode || null,
+              placeholder: f.placeholder || null,
+              autocomplete: 'off',
+              spellcheck: 'false'
+            });
+            input.value = str(f.value);
+          }
+          if (f.upper) {
+            input.addEventListener('input', () => {
+              const p = input.selectionStart;
+              input.value = input.value.toUpperCase();
+              try {
+                input.setSelectionRange(p, p);
+              } catch {
+                /* ignore */
+              }
+            });
+          }
+          return el(
+            'div',
+            { class: 'field' + (f.full ? ' full' : '') },
+            el('label', { for: id }, f.label, f.required ? el('span', { class: 'req', text: ' *' }) : null),
+            input,
+            f.hint ? el('span', { class: 'hint', text: f.hint }) : null
+          );
+        }
+
+        function dlgValues() {
+          const out = {};
+          $('#dlg-fields')
+            .querySelectorAll('input, select, textarea')
+            .forEach((n) => {
+              out[n.name] = n.value;
+            });
+          return out;
+        }
+
+        function refreshSummary() {
+          if (!dlgCfg) return;
+          const s = typeof dlgCfg.summary === 'function' ? dlgCfg.summary(dlgValues()) : dlgCfg.summary;
+          $('#dlg-summary').textContent = s;
+        }
+
+        function dlgError(msg) {
+          const e = $('#dlg-error');
+          if (msg) {
+            e.textContent = msg;
+            e.hidden = false;
+          } else {
+            e.textContent = '';
+            e.hidden = true;
+          }
+        }
+
+        function setBusy(b) {
+          dlgBusy = b;
+          const ok = $('#dlg-ok');
+          ok.disabled = b;
+          ok.textContent = b ? 'กำลังบันทึก…' : 'ยืนยัน';
+          $('#dlg-cancel').disabled = b;
+        }
+
+        function openDialog(cfg) {
+          if (!canWrite()) {
+            updateLock();
+            return;
+          }
+          dlgCfg = cfg;
+          $('#dlg-title').textContent = cfg.title;
+          $('#dlg-summary').classList.toggle('danger', Boolean(cfg.danger));
+          const fields = (cfg.fields || []).slice();
+          if (cfg.reason) {
+            fields.push({
+              name: 'reason',
+              label: 'เหตุผล',
+              type: 'textarea',
+              required: true,
+              full: true,
+              placeholder: 'ระบุเหตุผลที่บันทึกรายการนี้'
+            });
+          }
+          $('#dlg-fields').replaceChildren(...fields.map(buildField));
+          $('#dlg-fields').hidden = fields.length === 0;
+          $('#dlg-reauth').hidden = true;
+          $('#dlg-reauth-input').value = '';
+          dlgError('');
+          setBusy(false);
+          $('#dlg-ok').className = 'btn ' + (cfg.danger ? 'danger' : 'primary');
+          refreshSummary();
+          dlg.showModal();
+          const first = $('#dlg-fields').querySelector('input, select, textarea');
+          (first || $('#dlg-cancel')).focus();
+        }
+
+        function closeDialog() {
+          dlgCfg = null;
+          if (dlg.open) dlg.close();
+        }
+
+        $('#dlg-fields').addEventListener('input', refreshSummary);
+        $('#dlg-fields').addEventListener('change', refreshSummary);
+        $('#dlg-cancel').addEventListener('click', () => {
+          if (!dlgBusy) closeDialog();
+        });
+        dlg.addEventListener('cancel', (e) => {
+          if (dlgBusy) e.preventDefault();
+          else dlgCfg = null;
+        });
+
+        $('#dlg-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          if (dlgBusy || !dlgCfg) return;
+          const cfg = dlgCfg;
+          dlgError('');
+
+          if (!$('#dlg-reauth').hidden) {
+            const v = $('#dlg-reauth-input').value;
+            if (!v.trim()) {
+              dlgError('กรุณากรอกรหัสผู้ดูแลใหม่');
+              $('#dlg-reauth-input').focus();
+              return;
+            }
+            ssSet(KEY_ADMIN, v);
+            $('#admin-code').value = v;
+            $('#dlg-reauth').hidden = true;
+            updateLock();
+          }
+
+          const c = creds();
+          if (!c.admin || !c.by) {
+            dlgError(LOCK_MSG);
+            return;
+          }
+
+          const vals = dlgValues();
+          const errs = cfg.validate ? cfg.validate(vals) : [];
+          if (cfg.reason && !str(vals.reason).trim()) errs.push('กรุณากรอกเหตุผล');
+          if (errs.length) {
+            dlgError(errs.join(' · '));
+            return;
+          }
+
+          const body = cfg.body(vals);
+          if (cfg.reason) body.reason = vals.reason.trim();
+          body.by = c.by;
+
+          setBusy(true);
+          const r = await postAdmin(body, c.admin);
+          setBusy(false);
+
+          if (r.ok) {
+            const msg = cfg.success(r.data, vals);
+            closeDialog();
+            showToast(msg);
+            await loadData();
+            if (syncChannel) {
+              syncChannel.postMessage({ type: 'refresh', seq: ++state.syncSeq });
+            }
+            return;
+          }
+
+          if (r.status === 401) {
+            ssDel(KEY_ADMIN);
+            $('#admin-code').value = '';
+            updateLock();
+            $('#dlg-reauth').hidden = false;
+            dlgError(r.message + ' · ล้างรหัสผู้ดูแลที่บันทึกไว้แล้ว กรุณากรอกรหัสผู้ดูแลใหม่ด้านล่าง');
+            $('#dlg-reauth-input').focus();
+            return;
+          }
+
+          dlgError(r.message);
+        });
+
+        function showToast(msg) {
+          $('#toast-msg').textContent = msg;
+          $('#toast').hidden = false;
+        }
+        $('#toast-close').addEventListener('click', () => {
+          $('#toast').hidden = true;
+        });
+
+        // =========================================================
+        // ตรวจรูปแบบเบื้องต้น (ให้กฎธุรกิจตัดสินฝั่งเซิร์ฟเวอร์)
+        // =========================================================
+        const isPosInt = (v) => /^\d+$/.test(str(v).trim()) && Number(v) > 0;
+        const isNonNegInt = (v) => /^\d+$/.test(str(v).trim());
+        const isPosNum = (v) => str(v).trim() !== '' && Number.isFinite(Number(v)) && Number(v) > 0;
+        const isDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(str(v));
+
+        function requireFields(vals, names, errs) {
+          const miss = names.filter((n) => !str(vals[n]).trim()).map((n) => DRUG_FIELD_LABEL[n] || n);
+          if (miss.length) errs.push('กรอกให้ครบ: ' + miss.join(', '));
+        }
+        function opts(list) {
+          return list.map((v) => ({ value: v, label: v }));
+        }
+
+        // =========================================================
+        // คำสั่งฝั่งบัญชียา: drug_create, drug_update, drug_set_active
+        // =========================================================
+        function drugFields(d) {
+          const v = (k) => (d ? d[k] : '');
+          return [
+            { name: 'generic_name', label: 'ชื่อสามัญ', required: true, value: v('generic_name') },
+            { name: 'strength', label: 'ความแรง', required: true, value: v('strength'), placeholder: 'เช่น 500 mg' },
+            {
+              name: 'dosage_form',
+              label: 'รูปแบบ',
+              type: 'select',
+              required: true,
+              value: v('dosage_form'),
+              options: opts(distinct('dosage_form', d ? str(d.dosage_form) : ''))
+            },
+            {
+              name: 'unit',
+              label: 'หน่วย',
+              type: 'select',
+              required: true,
+              value: v('unit'),
+              options: opts(distinct('unit', d ? str(d.unit) : ''))
+            },
+            {
+              name: 'category',
+              label: 'หมวด',
+              type: 'select',
+              required: true,
+              value: v('category'),
+              options: opts(distinct('category', d ? str(d.category) : ''))
+            },
+            { name: 'atc_code', label: 'รหัส ATC', required: true, value: v('atc_code'), placeholder: 'เช่น N02BE01' },
+            {
+              name: 'reorder_level',
+              label: 'จุดสั่งซื้อ',
+              type: 'number',
+              step: 1,
+              min: 0,
+              inputmode: 'numeric',
+              required: true,
+              value: d ? str(d.reorder_level) : ''
+            }
+          ];
+        }
+
+        $('#btn-add-drug').addEventListener('click', () => {
+          openDialog({
+            title: 'เพิ่มยาใหม่',
+            fields: [
+              {
+                name: 'sku',
+                label: 'รหัสยา',
+                required: true,
+                upper: true,
+                placeholder: 'เช่น VITE400',
+                hint: 'พิมพ์ตัวเล็กได้ ระบบแปลงเป็นตัวใหญ่ให้'
+              },
+              ...drugFields(null)
+            ],
+            summary: (v) => {
+              const sku = str(v.sku).trim().toUpperCase();
+              return sku
+                ? 'เพิ่มยา ' +
+                    sku +
+                    ' ' +
+                    [v.generic_name, v.strength]
+                      .map((x) => str(x).trim())
+                      .filter(Boolean)
+                      .join(' ') +
+                    ' เข้าบัญชียา (ยังไม่มีล็อต)'
+                : 'เพิ่มยารายการใหม่เข้าบัญชียา กรอกข้อมูลให้ครบ 8 ช่อง';
+            },
+            validate: (v) => {
+              const errs = [];
+              requireFields(
+                v,
+                ['sku', 'generic_name', 'strength', 'dosage_form', 'unit', 'category', 'atc_code', 'reorder_level'],
+                errs
+              );
+              if (str(v.reorder_level).trim() && !isNonNegInt(v.reorder_level)) {
+                errs.push('จุดสั่งซื้อต้องเป็นจำนวนเต็มตั้งแต่ 0 ขึ้นไป');
+              }
+              return errs;
+            },
+            body: (v) => ({
+              action: 'drug_create',
+              drug: {
+                sku: v.sku.trim().toUpperCase(),
+                generic_name: v.generic_name.trim(),
+                strength: v.strength.trim(),
+                dosage_form: v.dosage_form,
+                unit: v.unit,
+                category: v.category,
+                atc_code: v.atc_code.trim(),
+                reorder_level: Number(v.reorder_level)
+              }
+            }),
+            success: (r, v) =>
+              'เพิ่มยา ' + (r.drug?.sku || r.sku || v.sku.trim().toUpperCase()) + ' เข้าบัญชียาแล้ว'
+          });
+        });
+
+        function drugChanges(d, v) {
+          const changes = {};
+          ['generic_name', 'strength', 'dosage_form', 'unit', 'category', 'atc_code'].forEach((k) => {
+            const nv = str(v[k]).trim();
+            if (nv !== str(d[k]).trim()) changes[k] = nv;
+          });
+          const rl = str(v.reorder_level).trim();
+          if (rl !== '' && Number(rl) !== Number(d.reorder_level)) changes.reorder_level = Number(rl);
+          return changes;
+        }
+
+        function openEditDrug(d) {
+          openDialog({
+            title: 'แก้ไขยา ' + str(d.sku),
+            fields: drugFields(d),
+            reason: true,
+            summary: (v) => {
+              const ch = Object.keys(drugChanges(d, v)).map((k) => DRUG_FIELD_LABEL[k]);
+              return (
+                'แก้ไขยา ' +
+                str(d.sku) +
+                ' (' +
+                drugLabel(d.sku) +
+                ') · ' +
+                (ch.length ? 'ช่องที่เปลี่ยน: ' + ch.join(', ') : 'ยังไม่ได้เปลี่ยนช่องใด') +
+                ' · รหัสยาแก้ไม่ได้'
+              );
+            },
+            validate: (v) => {
+              const errs = [];
+              requireFields(
+                v,
+                ['generic_name', 'strength', 'dosage_form', 'unit', 'category', 'atc_code', 'reorder_level'],
+                errs
+              );
+              if (str(v.reorder_level).trim() && !isNonNegInt(v.reorder_level)) {
+                errs.push('จุดสั่งซื้อต้องเป็นจำนวนเต็มตั้งแต่ 0 ขึ้นไป');
+              }
+              if (!errs.length && Object.keys(drugChanges(d, v)).length === 0) errs.push('ยังไม่ได้แก้ไขช่องใด');
+              return errs;
+            },
+            body: (v) => ({ action: 'drug_update', sku: d.sku, changes: drugChanges(d, v) }),
+            success: (r, v) =>
+              'แก้ไขยา ' +
+              str(d.sku) +
+              ' แล้ว (' +
+              Object.keys(drugChanges(d, v))
+                .map((k) => DRUG_FIELD_LABEL[k])
+                .join(', ') +
+              ')'
+          });
+        }
+
+        function openSetActive(d, active) {
+          const verb = active ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+          openDialog({
+            title: verb + 'ยา ' + str(d.sku),
+            danger: !active,
+            reason: true,
+            summary:
+              verb +
+              'ยา ' +
+              str(d.sku) +
+              ' (' +
+              drugLabel(d.sku) +
+              ') · ยอดใช้ได้ ' +
+              fmtInt(d.usable_qty) +
+              ' · จำนวนล็อต ' +
+              fmtInt(d.lot_count) +
+              (active ? '' : ' · ยาที่ปิดใช้งานจะเลือกรับเข้าล็อตใหม่ไม่ได้'),
+            body: () => ({ action: 'drug_set_active', sku: d.sku, active: active === true }),
+            success: () => verb + 'ยา ' + str(d.sku) + ' แล้ว'
+          });
+        }
+
+        // =========================================================
+        // คำสั่งฝั่งคลังรายล็อต: stock_receive, stock_fix_expiry, stock_set_status
+        // =========================================================
+        $('#btn-receive').addEventListener('click', () => {
+          const activeDrugs = state.catalog
+            .filter((d) => isTrue(d.is_active))
+            .sort((a, b) => str(a.sku).localeCompare(str(b.sku), 'en', { numeric: true }))
+            .map((d) => ({
+              value: str(d.sku),
+              label: str(d.sku) + ' · ' + [d.generic_name, d.strength].filter(Boolean).join(' ')
+            }));
+
+          openDialog({
+            title: 'รับยาเข้าล็อตใหม่',
+            fields: [
+              {
+                name: 'sku',
+                label: 'ยา',
+                type: 'select',
+                required: true,
+                full: true,
+                options: activeDrugs,
+                hint: 'แสดงเฉพาะยาที่เปิดใช้งานอยู่'
+              },
+              { name: 'lot', label: 'เลขล็อต', required: true, placeholder: 'ตามฉลาก เช่น VE2611' },
+              { name: 'qty', label: 'จำนวน', type: 'number', step: 1, min: 1, inputmode: 'numeric', required: true },
+              { name: 'received_date', label: 'วันรับ', type: 'date', required: true },
+              { name: 'expiry', label: 'วันหมดอายุ', type: 'date', required: true },
+              {
+                name: 'unit_cost',
+                label: 'ราคาทุนต่อหน่วย (บาท)',
+                type: 'number',
+                step: '0.01',
+                min: 0,
+                inputmode: 'decimal',
+                required: true
+              }
+            ],
+            summary: (v) => {
+              if (!v.sku) return 'เลือกยาและกรอกข้อมูลล็อตที่รับเข้า';
+              const parts = ['รับยา ' + v.sku + ' (' + drugLabel(v.sku) + ')'];
+              if (str(v.lot).trim()) parts.push('เลขล็อต ' + v.lot.trim());
+              if (isPosInt(v.qty)) parts.push('จำนวน ' + fmtInt(v.qty));
+              if (isPosNum(v.unit_cost)) parts.push('ราคาทุน ' + fmtMoney(v.unit_cost) + ' บาท/หน่วย');
+              if (v.expiry) parts.push('หมดอายุ ' + v.expiry);
+              return parts.join(' · ');
+            },
+            validate: (v) => {
+              const errs = [];
+              const miss = [];
+              if (!v.sku) miss.push('ยา');
+              if (!str(v.lot).trim()) miss.push('เลขล็อต');
+              if (!str(v.qty).trim()) miss.push('จำนวน');
+              if (!v.received_date) miss.push('วันรับ');
+              if (!v.expiry) miss.push('วันหมดอายุ');
+              if (!str(v.unit_cost).trim()) miss.push('ราคาทุน');
+              if (miss.length) errs.push('กรอกให้ครบ: ' + miss.join(', '));
+              if (str(v.qty).trim() && !isPosInt(v.qty)) errs.push('จำนวนต้องเป็นจำนวนเต็มมากกว่า 0');
+              if (str(v.unit_cost).trim() && !isPosNum(v.unit_cost)) errs.push('ราคาทุนต้องมากกว่า 0');
+              if (v.received_date && !isDate(v.received_date)) errs.push('วันรับไม่ครบ');
+              if (v.expiry && !isDate(v.expiry)) errs.push('วันหมดอายุไม่ครบ');
+              return errs;
+            },
+            body: (v) => ({
+              action: 'stock_receive',
+              sku: v.sku,
+              lot: v.lot.trim(),
+              received_date: v.received_date,
+              expiry: v.expiry,
+              qty: Number(v.qty),
+              unit_cost: Number(v.unit_cost)
+            }),
+            success: (r, v) =>
+              'รับยาเข้าแล้ว · รหัสล็อตใหม่ ' +
+              (r.stock?.stock_id || r.stock_id || '(ระบบไม่ได้ส่งรหัสกลับมา)') +
+              ' · ' +
+              v.sku +
+              ' เลขล็อต ' +
+              v.lot.trim() +
+              ' จำนวน ' +
+              fmtInt(v.qty)
+          });
+        });
+
+        function lotDesc(s) {
+          const exp = fmtDate(s.expiry);
+          return (
+            'ล็อต ' +
+            str(s.stock_id) +
+            ' (' +
+            str(s.sku) +
+            ' เลขล็อต ' +
+            str(s.lot) +
+            ') คงเหลือ ' +
+            fmtInt(s.qty_on_hand) +
+            ' · หมดอายุ ' +
+            (exp || 'ไม่ระบุ')
+          );
+        }
+
+        function openStockStatus(s, status) {
+          const verb = { active: 'ปล่อยใช้', quarantine: 'กัก', written_off: 'ตัดจำหน่าย' }[status];
+          openDialog({
+            title: verb + 'ล็อต ' + str(s.stock_id),
+            danger: status === 'written_off',
+            reason: true,
+            summary:
+              verb +
+              ' ' +
+              lotDesc(s) +
+              (status === 'written_off' ? ' · การตัดจำหน่ายย้อนกลับไม่ได้' : ''),
+            body: () => ({ action: 'stock_set_status', stock_id: s.stock_id, status }),
+            success: (r) =>
+              'เปลี่ยนสถานะล็อต ' +
+              str(s.stock_id) +
+              ' เป็น "' +
+              STATUS_LABEL[status] +
+              '" แล้ว' +
+              (r.adjustment_id ? ' · อ้างอิง ' + str(r.adjustment_id) : '')
+          });
+        }
+
+        function openFixExpiry(s) {
+          const cur = fmtDate(s.expiry);
+          openDialog({
+            title: 'แก้วันหมดอายุล็อต ' + str(s.stock_id),
+            reason: true,
+            fields: [
+              {
+                name: 'expiry',
+                label: 'วันหมดอายุใหม่',
+                type: 'date',
+                required: true,
+                value: cur && isDate(cur) ? cur : '',
+                hint: 'ตามฉลากจริง'
+              }
+            ],
+            summary: (v) => 'แก้วันหมดอายุ ' + lotDesc(s) + (v.expiry ? ' → เป็น ' + v.expiry : ''),
+            validate: (v) => (!v.expiry || !isDate(v.expiry) ? ['กรอกวันหมดอายุใหม่ให้ครบ'] : []),
+            body: (v) => ({ action: 'stock_fix_expiry', stock_id: s.stock_id, expiry: v.expiry }),
+            success: (r, v) => 'แก้วันหมดอายุล็อต ' + str(s.stock_id) + ' เป็น ' + v.expiry + ' แล้ว'
+          });
+        }
+
+        // =========================================================
+        // คำสั่งฝั่งรายการจ่าย: dispense_return, dispense_void
+        // =========================================================
+        function dispDesc(r) {
+          return (
+            'ใบจ่าย ' +
+            str(r.dispense_id) +
+            ' (' +
+            str(r.sku) +
+            ' เลขล็อต ' +
+            str(r.lot) +
+            ' ผู้ป่วย ' +
+            str(r.patient_code) +
+            ' วันที่ ' +
+            str(r.datetime) +
+            ') จ่ายไป ' +
+            fmtInt(r.qty)
+          );
+        }
+
+        function openReturn(r) {
+          openDialog({
+            title: 'คืนยาจากใบจ่าย ' + str(r.dispense_id),
+            reason: true,
+            fields: [
+              { name: 'qty', label: 'จำนวนที่คืน', type: 'number', step: 1, min: 1, inputmode: 'numeric', required: true }
+            ],
+            summary: (v) => 'คืนยาจาก ' + dispDesc(r) + (isPosInt(v.qty) ? ' · คืน ' + fmtInt(v.qty) : ''),
+            validate: (v) => {
+              if (!str(v.qty).trim()) return ['กรอกจำนวนที่คืน'];
+              return isPosInt(v.qty) ? [] : ['จำนวนที่คืนต้องเป็นจำนวนเต็มมากกว่า 0'];
+            },
+            body: (v) => ({ action: 'dispense_return', dispense_id: r.dispense_id, qty: Number(v.qty) }),
+            success: (resp, v) =>
+              'บันทึกคืนยาแล้ว · เลขที่ใบคืน ' +
+              (resp.dispense_id ? str(resp.dispense_id) : '(ระบบไม่ได้ส่งเลขกลับมา)') +
+              ' · คืนจาก ' +
+              str(r.dispense_id) +
+              ' จำนวน ' +
+              fmtInt(v.qty)
+          });
+        }
+
+        function openVoid(r) {
+          openDialog({
+            title: 'ยกเลิกรายการ ' + str(r.dispense_id),
+            danger: true,
+            reason: true,
+            summary: 'ยกเลิก ' + dispDesc(r) + ' · การยกเลิกย้อนกลับไม่ได้',
+            body: () => ({ action: 'dispense_void', dispense_id: r.dispense_id }),
+            success: (resp) =>
+              'ยกเลิกรายการ ' +
+              str(r.dispense_id) +
+              ' แล้ว' +
+              (resp.dispense_id && resp.dispense_id !== r.dispense_id
+                ? ' · เลขที่รายการยกเลิก ' + str(resp.dispense_id)
+                : '')
+          });
+        }
+
+        // ซิงก์อัปเดตทันทีเมื่อแท็บหน้าขายยาหรือแท็บอื่นแก้ไขข้อมูล
+        if (syncChannel) {
+          syncChannel.addEventListener('message', (ev) => {
+            if (ev?.data?.type === 'refresh') loadData();
+          });
+        }
+
+        // เริ่มทำงาน
+        $('#admin-code').value = ssGet(KEY_ADMIN);
+        $('#rx-code').value = ssGet(KEY_RX);
+        updateLock();
+        loadData();
       })();
     </script>
   </body>
