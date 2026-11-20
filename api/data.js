@@ -7,6 +7,7 @@ const TABLES = {
   stock: 'stock?select=*&order=stock_id',
   dispense_log: 'dispense_log?select=*&order=dispense_id',
   catalog: 'v_drug_catalog?select=*&order=sku',
+  incidents: 'incidents?select=*&order=incident_id',
 };
 
 module.exports = async (req, res) => {
@@ -23,13 +24,16 @@ module.exports = async (req, res) => {
       if (!r.ok) throw new Error(`Supabase ตอบ ${r.status} ที่ ${path.split('?')[0]}`);
       return r.json();
     };
-    // catalog อ่านแยก ถ้ายังไม่ได้รัน crud.sql ข้อมูลเดิมยังส่งได้ dashboard และ pos.html จึงไม่พังตาม
+    // catalog และ incidents อ่านแยกแบบ non-fatal เพื่อให้หน้าหลักไม่พังตามหากยังไม่ได้สร้างตาราง/view
     const getCatalog = get(TABLES.catalog).then(
       items => ({ items }),
       () => ({ error: 'ยังไม่มี v_drug_catalog ให้รัน crud.sql ใน Supabase' }));
-    const [cfg, drugs, stock, dispense, catalog] = await Promise.all([
+    const getIncidents = get(TABLES.incidents).then(
+      items => ({ items }),
+      () => ({ items: [] }));
+    const [cfg, drugs, stock, dispense, catalog, incidents] = await Promise.all([
       get('app_config?select=as_of&id=eq.1'),
-      get(TABLES.drugs), get(TABLES.stock), get(TABLES.dispense_log), getCatalog,
+      get(TABLES.drugs), get(TABLES.stock), get(TABLES.dispense_log), getCatalog, getIncidents,
     ]);
     // ตารางที่ไม่มีนโยบายอ่านจะคืน [] โดยไม่แจ้ง error จึงต้องตรวจเอง
     if (!cfg.length || !drugs.length || !stock.length) {
@@ -40,6 +44,7 @@ module.exports = async (req, res) => {
       drugs: { meta, items: drugs },
       stock: { meta, items: stock },
       dispense_log: { meta, items: dispense },
+      incidents: { meta, items: incidents.items },
     };
     if (catalog.items) out.catalog = { meta, items: catalog.items };
     else out.catalog_error = catalog.error;
