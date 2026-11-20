@@ -572,15 +572,11 @@
       /* ตาราง */
       .table-wrap {
         width: 100%;
-        overflow: auto;
-        max-height: calc(100vh - 320px);
-        min-height: 280px;
+        overflow-x: auto;
+        overflow-y: visible;
       }
       table { width: 100%; border-collapse: collapse; font-size: 15px; }
       thead th {
-        position: sticky;
-        top: 0;
-        z-index: 1;
         background: var(--sb-ceramic);
         color: var(--sb-house);
         font-size: 14px;
@@ -607,7 +603,90 @@
       .small { font-size: 13.5px; color: var(--sb-text-soft); display: block; font-weight: 400; }
       .empty td { text-align: center; color: var(--sb-text-soft); padding: 28px; }
       tr.row-expired td { background: #fdf5f4; }
-      .more-row { display: flex; justify-content: center; padding-top: 14px; }
+
+      /* ตัวแบ่งหน้า (Pagination) รองรับเมาส์และแท็บเล็ต */
+      .pager {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px 16px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid var(--sb-hairline);
+      }
+      .pager-info {
+        font-size: 14.5px;
+        color: var(--sb-text-soft);
+        font-variant-numeric: tabular-nums;
+      }
+      .pager-nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        min-height: 40px;
+        padding: 6px 12px;
+        border-radius: var(--sb-btn-radius);
+        border: 1px solid var(--sb-border);
+        background: var(--sb-white);
+        color: var(--sb-house);
+        font-family: inherit;
+        font-size: 14.5px;
+        font-weight: 600;
+        cursor: pointer;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+      }
+      .page-btn:hover:not(:disabled):not(.active) {
+        background: var(--sb-green-light);
+        border-color: var(--sb-accent);
+      }
+      .page-btn.active {
+        background: var(--sb-house);
+        border-color: var(--sb-house);
+        color: var(--sb-white);
+      }
+      .page-btn:disabled {
+        opacity: 0.42;
+        cursor: not-allowed;
+      }
+      .page-ellipsis {
+        padding: 0 4px;
+        color: var(--sb-text-soft);
+        font-size: 14.5px;
+        user-select: none;
+      }
+      .pager-size {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--sb-text-soft);
+      }
+      .pager-size select {
+        font: inherit;
+        font-size: 14.5px;
+        color: var(--sb-text);
+        background: var(--sb-white);
+        border: 1.5px solid var(--sb-border);
+        border-radius: 8px;
+        padding: 6px 10px;
+        min-height: 40px;
+        cursor: pointer;
+      }
+      .pager-size select:focus {
+        outline: none;
+        border-color: var(--sb-green);
+        box-shadow: 0 0 0 3px rgba(0, 98, 65, 0.14);
+      }
 
       /* ป้ายสถานะ (สีและข้อความชัดเจน) */
       .badge {
@@ -796,6 +875,10 @@
         .panel { padding: 16px; }
         .user-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .toolbar .field.search-field { max-width: 100%; }
+        .pager { flex-direction: column; align-items: stretch; }
+        .pager-nav { justify-content: center; }
+        .pager-size { justify-content: flex-end; }
+        .page-btn { min-width: 42px; min-height: 42px; }
       }
       @media (max-width: 640px) {
         .dlg-fields { grid-template-columns: 1fr; }
@@ -1027,6 +1110,7 @@
               <tbody id="cat-body"></tbody>
             </table>
           </div>
+          <div class="pager" id="cat-pager"></div>
         </section>
 
         <!-- แท็บ 2: คลังรายล็อต -->
@@ -1072,6 +1156,7 @@
               <tbody id="stk-body"></tbody>
             </table>
           </div>
+          <div class="pager" id="stk-pager"></div>
         </section>
 
         <!-- แท็บ 3: รายการจ่าย -->
@@ -1116,9 +1201,7 @@
               <tbody id="log-body"></tbody>
             </table>
           </div>
-          <div class="more-row">
-            <button type="button" class="btn secondary" id="log-more" hidden>แสดงเพิ่ม</button>
-          </div>
+          <div class="pager" id="log-pager"></div>
         </section>
 
         <!-- แท็บ 4: ผู้ปฏิบัติงาน (staff_users) & ตั้งค่าวันอ้างอิง & ประวัติ change_log -->
@@ -1242,9 +1325,7 @@
                 <tbody id="chg-body"></tbody>
               </table>
             </div>
-            <div class="more-row">
-              <button type="button" class="btn secondary" id="chg-more" hidden>แสดงประวัติเพิ่ม</button>
-            </div>
+            <div class="pager" id="chg-pager"></div>
           </div>
         </section>
       </div>
@@ -1313,8 +1394,6 @@
         const KEY_RX = 'rx_pharmacist_code';
         const NET_ERR = 'เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้ง';
         const LOCK_MSG = 'กรอกกุญแจผู้ดูแล (ADMIN_CODE) และรหัสผู้ปฏิบัติงาน แล้วกด "ตรวจสอบและปลดล็อก"';
-        const LOG_PAGE = 50;
-        const CHG_PAGE = 30;
 
         const STATUS_LABEL = { active: 'ใช้ได้', quarantine: 'กักไว้', written_off: 'ตัดจำหน่าย' };
         const TYPE_LABEL = { dispense: 'จ่าย', return: 'คืน', void: 'ยกเลิก' };
@@ -1348,8 +1427,12 @@
           staffUsersReady: false,
           changeLog: [],
           drugBySku: new Map(),
-          logShown: LOG_PAGE,
-          chgShown: CHG_PAGE,
+          pager: {
+            catalog: { page: 1, size: 15 },
+            stock: { page: 1, size: 15 },
+            log: { page: 1, size: 20 },
+            chg: { page: 1, size: 10 }
+          },
           authVerified: false,
           authVerifying: false,
           loadedOnce: false,
@@ -1877,6 +1960,146 @@
         }
 
         // =========================================================
+        // ตัวแบ่งหน้ามาตรฐาน (Pagination) สำหรับตารางทั้งหมด
+        // =========================================================
+        function paginateSlice(rows, cfg) {
+          const total = rows.length;
+          const size = Math.max(1, Number(cfg.size) || 15);
+          const pages = Math.max(1, Math.ceil(total / size));
+          const page = Math.min(Math.max(1, Number(cfg.page) || 1), pages);
+          cfg.page = page;
+          cfg.size = size;
+          const start = (page - 1) * size;
+          const end = Math.min(start + size, total);
+          return { slice: rows.slice(start, end), page, pages, start, end, total, size };
+        }
+
+        function pageWindow(current, total) {
+          if (total <= 7) {
+            const all = [];
+            for (let i = 1; i <= total; i++) all.push(i);
+            return all;
+          }
+          const set = new Set([1, total]);
+          for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) {
+            set.add(p);
+          }
+          const sorted = [...set].sort((a, b) => a - b);
+          const out = [];
+          for (let i = 0; i < sorted.length; i++) {
+            if (i > 0) {
+              const gap = sorted[i] - sorted[i - 1];
+              if (gap === 2) out.push(sorted[i - 1] + 1);
+              else if (gap > 2) out.push('...');
+            }
+            out.push(sorted[i]);
+          }
+          return out;
+        }
+
+        function scrollPanelTopIfNeeded(sel) {
+          const target = $(sel);
+          if (target && typeof target.getBoundingClientRect === 'function' && typeof target.scrollIntoView === 'function') {
+            if (target.getBoundingClientRect().top < 84) {
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }
+        }
+
+        function renderPager(containerSel, { label, info, unit, totalAll, sizes, onPage, onSize }) {
+          const box = $(containerSel);
+          if (!box) return;
+          const selId = containerSel.replace('#', '') + '-size';
+
+          const infoText =
+            info.total === 0
+              ? 'ไม่พบ' + unit
+              : 'แสดง ' +
+                fmtInt(info.start + 1) +
+                '–' +
+                fmtInt(info.end) +
+                ' จาก ' +
+                fmtInt(info.total) +
+                ' ' +
+                unit +
+                (totalAll !== info.total ? ' (กรองจากทั้งหมด ' + fmtInt(totalAll) + ')' : '') +
+                ' · หน้า ' +
+                fmtInt(info.page) +
+                ' / ' +
+                fmtInt(info.pages);
+          const infoEl = el('div', { class: 'pager-info', text: infoText });
+
+          const navBtns = [];
+          if (info.total > 0 && info.pages > 1) {
+            navBtns.push(
+              el('button', {
+                type: 'button',
+                class: 'page-btn',
+                disabled: info.page <= 1,
+                'aria-label': 'หน้าแรก',
+                onclick: () => onPage(1),
+                text: '«'
+              }),
+              el('button', {
+                type: 'button',
+                class: 'page-btn',
+                disabled: info.page <= 1,
+                onclick: () => onPage(info.page - 1),
+                text: 'ก่อนหน้า'
+              })
+            );
+            for (const item of pageWindow(info.page, info.pages)) {
+              if (item === '...') {
+                navBtns.push(el('span', { class: 'page-ellipsis', 'aria-hidden': 'true', text: '…' }));
+              } else {
+                const isCur = item === info.page;
+                navBtns.push(
+                  el('button', {
+                    type: 'button',
+                    class: 'page-btn' + (isCur ? ' active' : ''),
+                    'aria-current': isCur ? 'page' : null,
+                    onclick: () => {
+                      if (!isCur) onPage(item);
+                    },
+                    text: String(item)
+                  })
+                );
+              }
+            }
+            navBtns.push(
+              el('button', {
+                type: 'button',
+                class: 'page-btn',
+                disabled: info.page >= info.pages,
+                onclick: () => onPage(info.page + 1),
+                text: 'ถัดไป'
+              }),
+              el('button', {
+                type: 'button',
+                class: 'page-btn',
+                disabled: info.page >= info.pages,
+                'aria-label': 'หน้าสุดท้าย',
+                onclick: () => onPage(info.pages),
+                text: '»'
+              })
+            );
+          }
+
+          const navEl = el('nav', { class: 'pager-nav', 'aria-label': 'เปลี่ยนหน้าตาราง' + label }, ...navBtns);
+
+          const sel = el(
+            'select',
+            { id: selId, 'aria-label': 'จำนวนแถวต่อหน้า ' + label },
+            ...sizes.map((s) => el('option', { value: String(s), text: s + ' / หน้า' }))
+          );
+          sel.value = String(info.size);
+          sel.addEventListener('change', () => onSize(Number(sel.value)));
+
+          const sizeWrap = el('div', { class: 'pager-size' }, el('label', { for: selId, text: 'แสดง' }), sel);
+          box.replaceChildren(infoEl, navEl, sizeWrap);
+        }
+
+        // =========================================================
         // แท็บ 1: บัญชียา
         // =========================================================
         function rebuildCategoryFilter() {
@@ -1908,10 +2131,34 @@
             })
             .sort((a, b) => str(a.sku).localeCompare(str(b.sku), 'en', { numeric: true }));
 
+          const info = paginateSlice(rows, state.pager.catalog);
           $('#cat-body').replaceChildren(
-            ...(rows.length ? rows.map(catalogRow) : [emptyRow(10, 'ไม่พบรายการที่ตรงกับเงื่อนไข')])
+            ...(info.slice.length ? info.slice.map(catalogRow) : [emptyRow(10, 'ไม่พบรายการที่ตรงกับเงื่อนไข')])
           );
-          $('#cat-count').textContent = 'แสดง ' + rows.length + ' จาก ' + state.catalog.length + ' รายการ';
+          $('#cat-count').textContent =
+            rows.length === state.catalog.length
+              ? 'ทั้งหมด ' + fmtInt(rows.length) + ' รายการ'
+              : 'กรองได้ ' + fmtInt(rows.length) + ' จาก ' + fmtInt(state.catalog.length) + ' รายการ';
+
+          renderPager('#cat-pager', {
+            label: 'บัญชียา',
+            info,
+            unit: 'รายการ',
+            totalAll: state.catalog.length,
+            sizes: [10, 15, 25, 50],
+            onPage: (nextPage) => {
+              state.pager.catalog.page = nextPage;
+              renderCatalog();
+              updateLock();
+              scrollPanelTopIfNeeded('#panel-catalog');
+            },
+            onSize: (newSize) => {
+              state.pager.catalog.size = newSize;
+              state.pager.catalog.page = Math.floor(info.start / newSize) + 1;
+              renderCatalog();
+              updateLock();
+            }
+          });
         }
 
         function catalogRow(d) {
@@ -1945,6 +2192,7 @@
 
         ['#cat-q', '#cat-cat', '#cat-nolot', '#cat-inactive'].forEach((s) => {
           $(s).addEventListener('input', () => {
+            state.pager.catalog.page = 1;
             renderCatalog();
             updateLock();
           });
@@ -1974,10 +2222,34 @@
             })
             .sort((a, b) => str(a.stock_id).localeCompare(str(b.stock_id), 'en', { numeric: true }));
 
+          const info = paginateSlice(rows, state.pager.stock);
           $('#stk-body').replaceChildren(
-            ...(rows.length ? rows.map(stockRow) : [emptyRow(9, 'ไม่พบล็อตที่ตรงกับเงื่อนไข')])
+            ...(info.slice.length ? info.slice.map(stockRow) : [emptyRow(9, 'ไม่พบล็อตที่ตรงกับเงื่อนไข')])
           );
-          $('#stk-count').textContent = 'แสดง ' + rows.length + ' จาก ' + state.stock.length + ' ล็อต';
+          $('#stk-count').textContent =
+            rows.length === state.stock.length
+              ? 'ทั้งหมด ' + fmtInt(rows.length) + ' ล็อต'
+              : 'กรองได้ ' + fmtInt(rows.length) + ' จาก ' + fmtInt(state.stock.length) + ' ล็อต';
+
+          renderPager('#stk-pager', {
+            label: 'คลังรายล็อต',
+            info,
+            unit: 'ล็อต',
+            totalAll: state.stock.length,
+            sizes: [10, 15, 25, 50],
+            onPage: (nextPage) => {
+              state.pager.stock.page = nextPage;
+              renderStock();
+              updateLock();
+              scrollPanelTopIfNeeded('#panel-stock');
+            },
+            onSize: (newSize) => {
+              state.pager.stock.size = newSize;
+              state.pager.stock.page = Math.floor(info.start / newSize) + 1;
+              renderStock();
+              updateLock();
+            }
+          });
         }
 
         function stockRow(s) {
@@ -2028,6 +2300,7 @@
 
         ['#stk-q', '#stk-status'].forEach((s) => {
           $(s).addEventListener('input', () => {
+            state.pager.stock.page = 1;
             renderStock();
             updateLock();
           });
@@ -2065,22 +2338,34 @@
             return true;
           });
 
-          const shown = rows.slice(0, state.logShown);
+          const info = paginateSlice(rows, state.pager.log);
           $('#log-body').replaceChildren(
-            ...(shown.length ? shown.map(logRow) : [emptyRow(9, 'ไม่พบรายการที่ตรงกับเงื่อนไข')])
+            ...(info.slice.length ? info.slice.map(logRow) : [emptyRow(9, 'ไม่พบรายการที่ตรงกับเงื่อนไข')])
           );
           $('#log-count').textContent =
-            'แสดง ' +
-            shown.length +
-            ' จาก ' +
-            rows.length +
-            ' รายการ' +
-            (rows.length !== state.log.length ? ' (ทั้งหมด ' + state.log.length + ')' : '');
+            rows.length === state.log.length
+              ? 'ทั้งหมด ' + fmtInt(rows.length) + ' รายการ'
+              : 'กรองได้ ' + fmtInt(rows.length) + ' จาก ' + fmtInt(state.log.length) + ' รายการ';
 
-          const more = $('#log-more');
-          const left = rows.length - shown.length;
-          more.hidden = left <= 0;
-          more.textContent = 'แสดงเพิ่ม (' + Math.min(LOG_PAGE, left) + ' จากที่เหลือ ' + left + ')';
+          renderPager('#log-pager', {
+            label: 'รายการจ่าย',
+            info,
+            unit: 'รายการ',
+            totalAll: state.log.length,
+            sizes: [10, 20, 50, 100],
+            onPage: (nextPage) => {
+              state.pager.log.page = nextPage;
+              renderLog();
+              updateLock();
+              scrollPanelTopIfNeeded('#panel-log');
+            },
+            onSize: (newSize) => {
+              state.pager.log.size = newSize;
+              state.pager.log.page = Math.floor(info.start / newSize) + 1;
+              renderLog();
+              updateLock();
+            }
+          });
         }
 
         function logRow(r) {
@@ -2110,15 +2395,10 @@
 
         ['#log-q', '#log-type'].forEach((s) => {
           $(s).addEventListener('input', () => {
-            state.logShown = LOG_PAGE;
+            state.pager.log.page = 1;
             renderLog();
             updateLock();
           });
-        });
-        $('#log-more').addEventListener('click', () => {
-          state.logShown += LOG_PAGE;
-          renderLog();
-          updateLock();
         });
 
         // =========================================================
@@ -2348,10 +2628,10 @@
               str(r.changed_by).toLowerCase().includes(q)
             );
           });
-          const shown = rows.slice(0, state.chgShown);
+          const info = paginateSlice(rows, state.pager.chg);
           $('#chg-body').replaceChildren(
-            ...(shown.length
-              ? shown.map((r) =>
+            ...(info.slice.length
+              ? info.slice.map((r) =>
                   el(
                     'tr',
                     null,
@@ -2381,35 +2661,49 @@
               : [emptyRow(6, 'ไม่พบประวัติการแก้ไขระบบในเงื่อนไขที่ค้นหา')])
           );
           $('#chg-count').textContent =
-            'แสดง ' + shown.length + ' จาก ' + rows.length + ' รายการ' + (rows.length !== state.changeLog.length ? ' (ทั้งหมด ' + state.changeLog.length + ')' : '');
-          const more = $('#chg-more');
-          const left = rows.length - shown.length;
-          more.hidden = left <= 0;
-          more.textContent = 'แสดงประวัติเพิ่ม (' + Math.min(CHG_PAGE, left) + ' จากที่เหลือ ' + left + ')';
+            rows.length === state.changeLog.length
+              ? 'ทั้งหมด ' + fmtInt(rows.length) + ' รายการ'
+              : 'กรองได้ ' + fmtInt(rows.length) + ' จาก ' + fmtInt(state.changeLog.length) + ' รายการ';
+
+          renderPager('#chg-pager', {
+            label: 'ประวัติ change_log',
+            info,
+            unit: 'รายการ',
+            totalAll: state.changeLog.length,
+            sizes: [10, 20, 50],
+            onPage: (nextPage) => {
+              state.pager.chg.page = nextPage;
+              renderChangeLog();
+              scrollPanelTopIfNeeded('#audit-trail-section');
+            },
+            onSize: (newSize) => {
+              state.pager.chg.size = newSize;
+              state.pager.chg.page = Math.floor(info.start / newSize) + 1;
+              renderChangeLog();
+            }
+          });
         }
 
         if ($('#chg-q')) {
           $('#chg-q').addEventListener('input', () => {
-            state.chgShown = CHG_PAGE;
-            renderChangeLog();
-          });
-        }
-        if ($('#chg-more')) {
-          $('#chg-more').addEventListener('click', () => {
-            state.chgShown += CHG_PAGE;
+            state.pager.chg.page = 1;
             renderChangeLog();
           });
         }
 
         $('#jumpQuarantineBtn').addEventListener('click', () => {
+          state.pager.stock.page = 1;
           $('#stk-status').value = 'quarantine';
           renderStock();
+          updateLock();
           selectTab('stock', true);
         });
 
         $('#jumpInactiveBtn').addEventListener('click', () => {
+          state.pager.catalog.page = 1;
           $('#cat-inactive').checked = true;
           renderCatalog();
+          updateLock();
           selectTab('catalog', true);
         });
 
