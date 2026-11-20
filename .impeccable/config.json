@@ -30,6 +30,15 @@
         ],
         "createdAt": "2026-11-20T06:38:41.176Z",
         "reason": "Agent: .nav-clock-dot and .tz-ticker-dot are tied to live 1s PharmacyDateTime clock updates in shared datetime-ui.css"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "status.html"
+        ],
+        "createdAt": "2026-11-20T08:25:24.203Z",
+        "reason": "Agent: DESIGN-starbucks.md defines #f2f0eb (--sb-neutral-warm) as the shared house background token harmonized across all 6 pages"
       }
     ]
   }
