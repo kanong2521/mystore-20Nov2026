@@ -1997,7 +1997,7 @@
         }
       }
 
-      @media (max-width: 1120px) {
+      @media (max-width: 1240px) {
         .nav-links,
         .nav-chip,
         #focusCatalogBtn,
@@ -2007,6 +2007,9 @@
         .mobile-menu-btn {
           display: inline-flex;
         }
+      }
+
+      @media (max-width: 1120px) {
         .cat-dist-layout {
           grid-template-columns: 1fr;
         }
@@ -2076,7 +2079,7 @@
   <body>
     <header class="global-nav">
       <div class="nav-inner">
-        <div class="brand">
+        <a class="brand" href="./index.html" style="text-decoration:none;color:inherit">
           <span class="brand-emblem" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 10.5h-5.5V5a1.5 1.5 0 0 0-3 0v5.5H5a1.5 1.5 0 0 0 0 3h5.5V19a1.5 1.5 0 0 0 3 0v-5.5H19a1.5 1.5 0 0 0 0-3Z" />
@@ -2086,14 +2089,17 @@
             <span class="brand-kicker">Pharmacy Control · Starbucks Design</span>
             <span class="brand-title">Drug Master Intelligence</span>
           </div>
-        </div>
+        </a>
 
         <nav class="nav-links" aria-label="เมนูหลัก">
-          <a class="nav-link" href="./index.html">Inventory Dashboard</a>
+          <a class="nav-link" href="./index.html">หน้าแรก</a>
+          <a class="nav-link" href="./pos.html">หน้าขายยา</a>
+          <a class="nav-link" href="./dashboard.html">Dashboard คลังยา</a>
           <a class="nav-link active" href="./drug_dashboard.html" aria-current="page">
-            Drug Master Catalog
+            ทะเบียนยา
           </a>
-          <a class="nav-link" href="./status.html">สถานะระบบ</a>
+          <a class="nav-link" href="./admin.html">จัดการระบบ</a>
+          <a class="nav-link" href="./status.html">ตรวจสถานะ</a>
         </nav>
 
         <div class="nav-actions">
@@ -2124,11 +2130,14 @@
     </header>
 
     <div class="mobile-drawer" id="mobileDrawer">
-      <a href="./index.html">Inventory Dashboard</a>
+      <a href="./index.html">หน้าแรก</a>
+      <a href="./pos.html">หน้าขายยา</a>
+      <a href="./dashboard.html">Dashboard คลังยา</a>
       <a class="active" href="./drug_dashboard.html" aria-current="page">
-        Drug Master Catalog
+        ทะเบียนยา
       </a>
-      <a href="./status.html">สถานะระบบ (Status)</a>
+      <a href="./admin.html">จัดการระบบ</a>
+      <a href="./status.html">ตรวจสถานะ</a>
       <button type="button" class="btn btn-primary" id="openSyncMobile">
         สถานะ Supabase &amp; ส่งออก
       </button>

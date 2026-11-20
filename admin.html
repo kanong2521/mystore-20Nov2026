@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#1e3932" />
+    <meta
+      name="description"
+      content="หน้าจัดการระบบสำหรับผู้ดูแล (Admin) เชื่อมต่อ /api/admin เพื่อจัดการบัญชียา ล็อตสต็อก และการคืน/ยกเลิกรายการจ่ายยา"
+    />
+    <title>จัดการระบบ (ผู้ดูแล) | ระบบบริหารคลังยาและจ่ายยา</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23006241'/%3E%3Cpath d='M14 8h4v6h6v4h-6v6h-4v-6H8v-4h6z' fill='%23ffffff'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./datetime-ui.css" />
+    <style>
+      :root {
+        --sb-font-sans: 'Inter', 'Noto Sans Thai', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --sb-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        --sb-green: #006241;
+        --sb-accent: #00754a;
+        --sb-house: #1e3932;
+        --sb-green-light: #d4e9e2;
+        --sb-green-tint: rgba(0, 98, 65, 0.14);
+        --sb-gold: #cba258;
+        --sb-gold-lightest: #faf6ee;
+        --sb-gold-ink: #7a5a1e;
+        --sb-white: #ffffff;
+        --sb-neutral-cool: #f9f9f9;
+        --sb-neutral-warm: #f2f0eb;
+        --sb-ceramic: #edebe9;
+        --sb-text: rgba(0, 0, 0, 0.87);
+        --sb-text-soft: rgba(0, 0, 0, 0.58);
+        --sb-text-white: #ffffff;
+        --sb-text-white-soft: rgba(255, 255, 255, 0.8);
+        --sb-red: #c82014;
+        --sb-red-tint: rgba(200, 32, 20, 0.08);
+        --sb-border: #d6dbde;
+        --sb-hairline: #e7e7e7;
+        --sb-card-radius: 12px;
+        --sb-btn-radius: 50px;
+        --sb-shadow-card: 0 0 0.5px rgba(0, 0, 0, 0.14), 0 1px 2px rgba(0, 0, 0, 0.14);
+        --sb-shadow-nav: 0 1px 3px rgba(0, 0, 0, 0.1), 0 2px 2px rgba(0, 0, 0, 0.06), 0 0 2px rgba(0, 0, 0, 0.07);
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; overflow-x: clip; }
+      @media (pointer: fine) {
+        html { overscroll-behavior: none; }
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--sb-neutral-warm);
+        color: var(--sb-text);
+        font-family: var(--sb-font-sans);
+        font-size: 14px;
+        line-height: 1.5;
+        letter-spacing: -0.01em;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(0, 98, 65, 0.14);
+      }
+      ::selection { background: var(--sb-green-light); color: var(--sb-house); }
+      a { color: inherit; text-decoration: none; }
+      button, a { touch-action: manipulation; }
+      :focus-visible { outline: 2px solid var(--sb-green); outline-offset: 2px; }
+      h1, h2, h3 { overflow-wrap: break-word; text-wrap: balance; }
+      .tabular { font-variant-numeric: tabular-nums; }
+      .mono { font-family: var(--sb-font-mono); font-size: 12.5px; }
+
+      .skip-link {
+        position: absolute;
+        left: 16px;
+        top: -48px;
+        z-index: 200;
+        padding: 8px 16px;
+        border-radius: var(--sb-btn-radius);
+        background: var(--sb-house);
+        color: var(--sb-white);
+        font-weight: 600;
+        transition: top 150ms ease;
+      }
+      .skip-link:focus { top: 12px; }
+
+      .global-nav {
+        position: sticky;
+        top: 0;
+        z-index: 90;
+        background: var(--sb-white);
+        box-shadow: var(--sb-shadow-nav);
+        min-height: 72px;
+        display: flex;
+        align-items: center;
+      }
+      .nav-inner {
+        width: 100%;
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 10px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+      .brand-emblem {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: var(--sb-green);
+        color: var(--sb-white);
+        display: grid;
+        place-items: center;
+      }
+      .brand-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--sb-house);
+        white-space: nowrap;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .nav-link {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 4px 2px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--sb-text-soft);
+        white-space: nowrap;
+        transition: color 150ms ease;
+      }
+      .nav-link:hover { color: var(--sb-green); }
+      .nav-link.active { color: var(--sb-green); font-weight: 700; }
+      .nav-link.active::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -2px;
+        height: 3px;
+        background: var(--sb-green);
+      }
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .mobile-menu-btn {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 6px 14px;
+        border-radius: var(--sb-btn-radius);
+        border: 1px solid var(--sb-border);
+        background: var(--sb-white);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .mobile-drawer {
+        display: none;
+        background: var(--sb-white);
+        border-bottom: 1px solid var(--sb-border);
+        padding: 12px 16px 16px;
+        gap: 8px;
+        flex-direction: column;
+      }
+      .mobile-drawer.open { display: flex; }
+      .mobile-drawer a { padding: 10px 12px; border-radius: 8px; font-weight: 600; }
+      .mobile-drawer a.active { background: var(--sb-green-light); color: var(--sb-house); }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 38px;
+        padding: 8px 18px;
+        border-radius: var(--sb-btn-radius);
+        border: 1px solid transparent;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
+      }
+      .btn:active { transform: scale(0.95); }
+      .btn-primary { background: var(--sb-accent); color: var(--sb-white); border-color: var(--sb-accent); }
+      .btn-primary:hover { background: var(--sb-green); border-color: var(--sb-green); }
+      .btn-outline-green { background: transparent; color: var(--sb-accent); border-color: var(--sb-accent); }
+      .btn-outline-green:hover { background: var(--sb-green-light); }
+      .btn-outline-white { background: transparent; color: var(--sb-white); border-color: rgba(255, 255, 255, 0.72); }
+      .btn-outline-white:hover { background: rgba(255, 255, 255, 0.14); }
+      .btn-inverted { background: var(--sb-white); color: var(--sb-house); border-color: var(--sb-white); }
+      .btn-inverted:hover { background: var(--sb-green-light); }
+
+      .hero-band {
+        background: var(--sb-house);
+        color: var(--sb-text-white);
+        padding: 28px 40px 32px;
+      }
+      .hero-inner {
+        max-width: 1440px;
+        margin: 0 auto;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .hero-title { margin: 0 0 8px; font-size: 30px; font-weight: 600; line-height: 1.25; color: var(--sb-white); }
+      .hero-sub { margin: 0; max-width: 65ch; color: var(--sb-text-white-soft); font-size: 15px; }
+      .hero-ctas { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-size: 12.5px;
+        font-weight: 600;
+        background: var(--sb-green-light);
+        color: var(--sb-house);
+      }
+      .status-pill.bad { background: var(--sb-red-tint); color: var(--sb-red); }
+      .status-pill.wait {
+        background: var(--sb-ceramic);
+        color: var(--sb-text-soft);
+      }
+      .hero-band .status-pill.wait {
+        background: rgba(255, 255, 255, 0.16);
+        color: var(--sb-white);
+      }
+
+      .container {
+        width: 100%;
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 24px 40px 48px;
+        flex: 1;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+        gap: 20px;
+        align-items: start;
+      }
+      .card {
+        background: var(--sb-white);
+        border-radius: var(--sb-card-radius);
+        box-shadow: var(--sb-shadow-card);
+        padding: 22px 24px;
+        min-width: 0;
+      }
+      .card.ceramic { background: var(--sb-ceramic); box-shadow: none; border: 1px solid var(--sb-border); }
+      .card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .card-title { margin: 0 0 4px; font-size: 20px; font-weight: 600; color: var(--sb-green); }
+      .card-sub { margin: 0; font-size: 13px; color: var(--sb-text-soft); }
+
+      .callout {
+        background: var(--sb-gold-lightest);
+        border: 1px solid var(--sb-gold);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: var(--sb-gold-ink);
+        font-size: 13.5px;
+        margin-bottom: 18px;
+      }
+
+      .action-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .action-item {
+        background: var(--sb-neutral-cool);
+        border: 1px solid var(--sb-hairline);
+        border-radius: 10px;
+        padding: 12px 14px;
+      }
+      .action-item strong {
+        display: block;
+        color: var(--sb-house);
+        margin-bottom: 2px;
+      }
+      .action-item span {
+        font-size: 12.5px;
+        color: var(--sb-text-soft);
+      }
+
+      .check-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: var(--sb-white);
+        border: 1px solid var(--sb-hairline);
+        margin-bottom: 8px;
+      }
+
+      .site-footer {
+        background: var(--sb-house);
+        color: var(--sb-text-white);
+        padding: 24px 40px 32px;
+        border-top: 3px solid var(--sb-gold);
+      }
+      .footer-inner {
+        max-width: 1440px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .footer-links { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--sb-text-white-soft); }
+      .footer-links a:hover { color: var(--sb-white); text-decoration: underline; }
+
+      @media (max-width: 1240px) {
+        .nav-links { display: none; }
+        .mobile-menu-btn { display: inline-flex; }
+      }
+      @media (max-width: 960px) {
+        .grid-2 { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 767px) {
+        .nav-inner, .hero-band, .container, .site-footer { padding-left: 16px; padding-right: 16px; }
+        .hero-title { font-size: 24px; }
+        .action-grid { grid-template-columns: 1fr; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">ข้ามไปยังเนื้อหาหลัก</a>
+
+    <header class="global-nav">
+      <div class="nav-inner">
+        <a class="brand" href="./index.html" translate="no">
+          <span class="brand-emblem" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 10.5h-5.5V5a1.5 1.5 0 0 0-3 0v5.5H5a1.5 1.5 0 0 0 0 3h5.5V19a1.5 1.5 0 0 0 3 0v-5.5H19a1.5 1.5 0 0 0 0-3Z" />
+            </svg>
+          </span>
+          <span class="brand-title">Pharmacy Control</span>
+        </a>
+
+        <nav class="nav-links" aria-label="เมนูหลัก">
+          <a class="nav-link" href="./index.html">หน้าแรก</a>
+          <a class="nav-link" href="./pos.html">หน้าขายยา</a>
+          <a class="nav-link" href="./dashboard.html">Dashboard คลังยา</a>
+          <a class="nav-link" href="./drug_dashboard.html">ทะเบียนยา</a>
+          <a class="nav-link active" href="./admin.html" aria-current="page">จัดการระบบ</a>
+          <a class="nav-link" href="./status.html">ตรวจสถานะ</a>
+        </nav>
+
+        <div class="nav-actions">
+          <span class="nav-clock-chip tabular" id="navClockChip" aria-live="off"></span>
+          <a class="btn btn-outline-green btn-sm" href="./status.html">ยืนยันรหัสผู้ดูแล</a>
+          <button
+            type="button"
+            class="mobile-menu-btn"
+            id="mobileMenuBtn"
+            aria-expanded="false"
+            aria-controls="mobileDrawer"
+          >
+            เมนู
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="mobile-drawer" id="mobileDrawer">
+      <a href="./index.html">หน้าแรก</a>
+      <a href="./pos.html">หน้าขายยา</a>
+      <a href="./dashboard.html">Dashboard คลังยา</a>
+      <a href="./drug_dashboard.html">ทะเบียนยา</a>
+      <a class="active" href="./admin.html" aria-current="page">จัดการระบบ</a>
+      <a href="./status.html">ตรวจสถานะ</a>
+    </div>
+
+    <section class="hero-band">
+      <div class="hero-inner">
+        <div>
+          <h1 class="hero-title">จัดการระบบ (ผู้ดูแล) — <span translate="no">CRUD &amp; Audit Control</span></h1>
+          <p class="hero-sub">
+            ศูนย์ควบคุมการทำงานทั้ง 8 คำสั่งผ่าน <code translate="no">/api/admin</code> ที่ทำงานเป็นธุรกรรมเดียวพร้อมบันทึก
+            <span translate="no">change_log</span> และยืนยันตัวตนด้วย <span translate="no">ADMIN_CODE</span> บนฝั่งเซิร์ฟเวอร์
+          </p>
+          <div class="hero-ctas">
+            <a class="btn btn-inverted" href="./status.html">ทดสอบรหัสผู้ดูแลใน Status</a>
+            <a class="btn btn-outline-white" href="./dashboard.html">ดู Dashboard คลังยา</a>
+            <a class="btn btn-outline-white" href="./index.html">กลับหน้าแรก</a>
+          </div>
+        </div>
+        <div class="status-pill wait" id="adminHeroStatus" aria-live="polite">กำลังตรวจประตูล็อกผู้ดูแล…</div>
+      </div>
+    </section>
+
+    <main class="container" id="main">
+      <div class="callout">
+        <strong>เฟสเตรียมพร้อมเส้นทางผู้ดูแล:</strong>
+        <span translate="no">Endpoint POST /api/admin</span> พร้อมคำสั่งทั้ง 8 รายการแล้วบนเซิร์ฟเวอร์
+        ส่วนหน้าฟอร์มกรอกและแก้ไขข้อมูลจะพัฒนาต่อในเฟสหน้า โดยคุณสามารถทดสอบสิทธิ์ <span translate="no">ADMIN_CODE</span> (ไฟดวงที่ 5) ได้ทันทีในหน้าตรวจสถานะ
+      </div>
+
+      <div class="grid-2">
+        <section class="card">
+          <div class="card-head">
+            <div>
+              <h2 class="card-title">8 คำสั่งฝั่งผู้ดูแลที่พร้อมบนเซิร์ฟเวอร์ (<span translate="no">api/admin.js</span>)</h2>
+              <p class="card-sub">ทุกคำสั่งต้องส่ง <code translate="no">x-admin-code</code> และ <code translate="no">by</code> (รหัสเภสัชกรผู้บันทึก)</p>
+            </div>
+          </div>
+          <div class="action-grid">
+            <div class="action-item">
+              <strong class="mono" translate="no">drug_create</strong>
+              <span>เพิ่มยาใหม่เข้าบัญชียา</span>
+            </div>
+            <div class="action-item">
+              <strong class="mono" translate="no">drug_update</strong>
+              <span>แก้ไขข้อมูลยาพร้อมระบุเหตุผล</span>
+            </div>
+            <div class="action-item">
+              <strong class="mono" translate="no">drug_set_active</strong>
+              <span>เปิด/ปิดใช้งานยาแทนการลบจริง</span>
+            </div>
+            <div class="action-item">
+              <strong class="mono" translate="no">stock_receive</strong>
+              <span>รับล็อตใหม่เข้าคลัง (สร้างรหัส S0xx)</span>
+            </div>
+            <div class="action-item">
+              <strong class="mono" translate="no">stock_fix_expiry</strong>
+              <span>แก้วันหมดอายุของล็อตที่กักกันตามฉลาก</span>
+            </div>
+            <div class="action-item">
+              <strong class="mono" translate="no">stock_set_status</strong>
+              <span>เปลี่ยนสถานะ active / quarantine / written_off</span>
+            </div>
+            <div class="action-item">
+              <strong class="mono" translate="no">dispense_return</strong>
+              <span>รับคืนยาเข้าล็อตเดิมแบบบางส่วนหรือทั้งหมด</span>
+            </div>
+            <div class="action-item">
+              <strong class="mono" translate="no">dispense_void</strong>
+              <span>ยกเลิกรายการจ่ายที่บันทึกผิดพร้อมคืนยอด</span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="card ceramic">
+          <div class="card-head">
+            <div>
+              <h2 class="card-title">สรุปสถานะความปลอดภัยและงานค้าง</h2>
+              <p class="card-sub">อ่านจากฐานข้อมูล <span translate="no">Supabase</span> ล่าสุด</p>
+            </div>
+          </div>
+          <div id="adminChecks" aria-live="polite">
+            <div class="check-row">
+              <span>ประตูล็อก <code translate="no">/api/admin</code></span>
+              <span class="status-pill wait" id="chkGuard">กำลังตรวจ…</span>
+            </div>
+            <div class="check-row">
+              <span>ล็อตกักกัน (<span translate="no">Quarantine</span>)</span>
+              <span class="status-pill wait" id="chkQuarantine">กำลังตรวจ…</span>
+            </div>
+            <div class="check-row">
+              <span>รายการยาปิดใช้งาน</span>
+              <span class="status-pill wait" id="chkInactive">กำลังตรวจ…</span>
+            </div>
+            <div class="check-row">
+              <span>อุบัติการณ์เปิดอยู่ (<span translate="no">Open Incidents</span>)</span>
+              <span class="status-pill wait" id="chkIncidents">กำลังตรวจ…</span>
+            </div>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+            <a class="btn btn-primary" href="./status.html">ทดสอบ ADMIN_CODE (ไฟ 5 ดวง)</a>
+            <a class="btn btn-outline-green" href="./drug_dashboard.html">ดูทะเบียนยา</a>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div>
+          <strong>Pharmacy Control</strong> · <span translate="no">Supabase /api/admin Guarded</span>
+        </div>
+        <div class="footer-links">
+          <a href="./index.html">หน้าแรก</a>
+          <a href="./pos.html">หน้าขายยา</a>
+          <a href="./dashboard.html">Dashboard คลังยา</a>
+          <a href="./drug_dashboard.html">ทะเบียนยา</a>
+          <a href="./status.html">ตรวจสถานะ</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="./sync-store.js"></script>
+    <script src="./datetime-ui.js"></script>
+    <script>
+      (async () => {
+        'use strict';
+        const $ = (id) => document.getElementById(id);
+
+        $('mobileMenuBtn').onclick = () => {
+          const open = $('mobileDrawer').classList.toggle('open');
+          $('mobileMenuBtn').setAttribute('aria-expanded', String(open));
+        };
+
+        if (window.PharmacyDateTime?.mountTimeTicker) {
+          window.PharmacyDateTime.mountTimeTicker(document.createElement('div'), {
+            navClockEl: $('navClockChip')
+          });
+        }
+
+        const [guardProbe, dataRes] = await Promise.allSettled([
+          fetch('/api/admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-code': 'probe-' + Math.random().toString(36).slice(2) },
+            body: JSON.stringify({ action: 'dispense_void' })
+          }),
+          window.PharmacySync.loadAll()
+        ]);
+
+        let guardOk = false;
+        if (guardProbe.status === 'fulfilled' && guardProbe.value.status === 401) {
+          guardOk = true;
+          $('chkGuard').textContent = 'ล็อกแน่น (401)';
+          $('chkGuard').className = 'status-pill';
+        } else {
+          $('chkGuard').textContent = 'ตรวจไม่ผ่าน';
+          $('chkGuard').className = 'status-pill bad';
+        }
+
+        if (dataRes.status === 'fulfilled') {
+          const b = dataRes.value;
+          const qCount = b.stock.items.filter((s) => s.status === 'quarantine').length;
+          const inactCount = b.drugs.items.filter((d) => d.is_active === false).length;
+          const openInc = (b.incidents?.items || []).filter((i) => i.status === 'open').length;
+
+          $('chkQuarantine').textContent = `${qCount} ล็อต`;
+          $('chkQuarantine').className = 'status-pill tabular';
+          $('chkInactive').textContent = `${inactCount} SKU`;
+          $('chkInactive').className = 'status-pill tabular';
+          $('chkIncidents').textContent = `${openInc} รายการ`;
+          $('chkIncidents').className = openInc > 0 ? 'status-pill bad tabular' : 'status-pill tabular';
+
+          $('adminHeroStatus').textContent = guardOk ? 'ประตูล็อก ADMIN_CODE พร้อมทำงาน' : 'ตรวจสิทธิ์ผู้ดูแลไม่ผ่าน';
+          $('adminHeroStatus').className = guardOk ? 'status-pill' : 'status-pill bad';
+        } else {
+          $('adminHeroStatus').textContent = 'โหลดข้อมูลคลังไม่สำเร็จ';
+          $('adminHeroStatus').className = 'status-pill bad';
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -48,9 +48,33 @@
   .check.bad .hint { display: block; }
   .summary { font-weight: 600; font-size: 18px; margin: 4px 0 0; }
   code { font-family: ui-monospace, Consolas, monospace; font-size: 14px; background: var(--wait-bg); padding: 1px 5px; border-radius: 4px; }
+  .top-nav { background: #1e3932; color: #fff; border-bottom: 2px solid #cba258; }
+  .top-nav-inner { max-width: 1120px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .top-brand { color: #fff; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 15px; }
+  .top-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .top-links a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: 999px; transition: background-color 150ms ease, color 150ms ease; }
+  .top-links a:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .top-links a[aria-current="page"] { background: #d4e9e2; color: #1e3932; }
+  .top-links a:focus-visible, .top-brand:focus-visible { outline: 2px solid #d4e9e2; outline-offset: 2px; }
 </style>
 </head>
 <body>
+<header class="top-nav">
+  <div class="top-nav-inner">
+    <a class="top-brand" href="./index.html" translate="no">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 10.5h-5.5V5a1.5 1.5 0 0 0-3 0v5.5H5a1.5 1.5 0 0 0 0 3h5.5V19a1.5 1.5 0 0 0 3 0v-5.5H19a1.5 1.5 0 0 0 0-3Z"/></svg>
+      Pharmacy Control
+    </a>
+    <nav class="top-links" aria-label="เมนูหลัก">
+      <a href="./index.html">หน้าแรก</a>
+      <a href="./pos.html">หน้าขายยา</a>
+      <a href="./dashboard.html">Dashboard คลังยา</a>
+      <a href="./drug_dashboard.html">ทะเบียนยา</a>
+      <a href="./admin.html">จัดการระบบ</a>
+      <a href="./status.html" aria-current="page">ตรวจสถานะ</a>
+    </nav>
+  </div>
+</header>
 <main>
   <h1>ไฟสถานะระบบร้านยาจำลอง</h1>
   <p class="sub">ตรวจว่า API ทั้ง 3 ไฟล์บน Vercel เชื่อมกับ Supabase ได้ครบ ทุกการตรวจ<strong>ไม่เปลี่ยนข้อมูล</strong>ในฐานข้อมูล</p>
